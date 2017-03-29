@@ -65,7 +65,8 @@ public class Main extends Thread{
             System.out.println("Type the action number as following:");
             System.out.println("1. Register a topic with eventbus.");
             System.out.println("2. Register a message in topic");
-            System.out.println("3. To exit.");
+            System.out.println("3. Subscription request");
+            System.out.println("4. To exit.");
             System.out.println("*********************************************************************************************\n");
             Scanner in = new Scanner(System.in);
             userInput = in.nextLine();                         //get the chosen service from the user
@@ -95,6 +96,12 @@ public class Main extends Thread{
             }
            
             else if (userInput.equals("3"))                    //if user entered 6
+            {
+            	System.out.println("Enter the topic name");
+                String topicName = in.nextLine();  
+                fh.Subscribe_Request(topicName);
+            }
+            else if (userInput.equals("4"))                    //if user entered 6
             {
                 System.out.println("Exiting...");
                 System.exit(0);                         //exit the program
@@ -168,7 +175,7 @@ public class Main extends Thread{
         }
     }
 */
-    static long get_performance_measurement_for_search_request(MessageHandler f, String fileName , int loop)
+    /*static long get_performance_measurement_for_search_request(MessageHandler f, String fileName , int loop)
     {
         long sum=0;
         try
@@ -186,7 +193,7 @@ public class Main extends Thread{
             e.printStackTrace();
         }
         return sum;
-    }
+    }*/
 }
 
 
