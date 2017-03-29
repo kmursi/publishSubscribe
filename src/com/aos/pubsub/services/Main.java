@@ -58,7 +58,7 @@ public class Main extends Thread{
             e.printStackTrace();
         }
         /////////////////////////////////////////////////////////////////////////////
-        File_Handler fh = new File_Handler(peerID,serverIP);     //define and initiate handler object from the main thread
+        MessageHandler fh = new MessageHandler(peerID,serverIP);     //define and initiate handler object from the main thread
         /////////////////////////////////////////////////////////////////////////////
         while (true)
         {
@@ -93,7 +93,7 @@ public class Main extends Thread{
                  MessageMarker mm = null;
                  Message message = new Message(0,messageStr,topicName);
                //  tModel.setTopicName(topicName);
-                 fh.publishTopic(message);             //call register function and attach the file name
+                 fh.publishMessage(message);             //call register function and attach the file name
             }
            
             else if (userInput.equals("3"))                    //if user entered 6
@@ -170,7 +170,7 @@ public class Main extends Thread{
         }
     }
 */
-    static long get_performance_measurement_for_search_request(File_Handler f, String fileName , int loop)
+    static long get_performance_measurement_for_search_request(MessageHandler f, String fileName , int loop)
     {
         long sum=0;
         try

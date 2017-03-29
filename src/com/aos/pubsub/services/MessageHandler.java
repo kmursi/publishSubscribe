@@ -17,7 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.aos.pubsub.services.model.MessageMarker;
 import com.aos.pubsub.services.model.TopicModel;
 
-public class File_Handler {
+public class MessageHandler {
 	private ObjectMapper mapper = new ObjectMapper();
     String peerID;
     String serverIP = "localhost";
@@ -25,7 +25,7 @@ public class File_Handler {
     Socket socket;
     /*********************************************************************************************/
 
-    public File_Handler (String peerID, String serverIP)
+    public MessageHandler (String peerID, String serverIP)
     {
         this.serverIP=serverIP;
         this.peerID=peerID;             //store peer ID into peerID
@@ -92,6 +92,30 @@ public class File_Handler {
                 e.printStackTrace();
             }
     }
+    
+    public void publishMessage(MessageMarker messageModel)                      //Register with index server Method
+    {
+        /////////////////////////////////////////////////////////////////////////////
+    	try {
+                socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
+                System.out.println("\nConnected to the server..\n");
+                out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
+                out.flush();
+                out.writeObject(mapper.writeValueAsString(messageModel));                                 //send the message
+                out.flush();
+                /////////////////////////////////////////////////////////////////////////////
+              //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
+                out.close();                                               //close writer
+                socket.close();                                            //close socket
+            }
+            catch(UnknownHostException unknownHost){                       //To Handle Unknown Host Exception
+                System.err.println("host not available..!");
+            }
+            catch(Exception e ){                                           //To Handle Input-Output Exception
+                e.printStackTrace();
+            }
+    }
+
 
     /*********************************************************************************************/
 

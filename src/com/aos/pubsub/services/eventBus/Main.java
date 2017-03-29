@@ -21,8 +21,7 @@ public class Main extends Thread{
     public static void main(String[] args) {
 
         System.out.println("=======================================================\n");
-        System.out.println("Waiting for peers to register files..\n");
-        System.out.println("Waiting for peers to search files..\n");
+        System.out.println("Event Bus is up and running..........\n");
         System.out.println("=======================================================\n");
         /////////////////////////////////////////////////////////////////////////////
         executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
