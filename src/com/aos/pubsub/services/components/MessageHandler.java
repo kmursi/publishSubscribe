@@ -1,4 +1,4 @@
-package com.aos.pubsub.services;
+package com.aos.pubsub.services.components;
 
 
 import java.io.File;
@@ -11,11 +11,9 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import org.codehaus.jackson.map.MapperConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.aos.pubsub.services.model.MessageMarker;
-import com.aos.pubsub.services.model.TopicModel;
 
 public class MessageHandler {
 	private ObjectMapper mapper = new ObjectMapper();

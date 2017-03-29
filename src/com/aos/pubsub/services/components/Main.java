@@ -1,4 +1,4 @@
-package com.aos.pubsub.services;
+package com.aos.pubsub.services.components;
 
 
 import java.io.File;
@@ -8,8 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
