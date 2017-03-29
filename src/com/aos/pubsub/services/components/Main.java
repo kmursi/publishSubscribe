@@ -43,7 +43,7 @@ public class Main extends Thread{
             System.exit(0);
         }
         /////////////////////////////////////////////////////////////////////////////
-        String peerID = "60002";             // the peer ID used as a port listener as well
+        String peerID = "60006";             // the peer ID used as a port listener as well
         Thread thread;                      //define thread
         System.out.println("\nWaiting for peers to download files..");
         System.out.println("=======================================================\n");
