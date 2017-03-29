@@ -138,22 +138,23 @@ public class MessageHandler {
     {
         String message;
         try{
-            socket = new Socket(serverIP, 60001);              //initiate socket withe the server through server searching port
+            socket = new Socket(serverIP, 60002);              //initiate socket withe the server through server searching port
             System.out.println("\nConnected to the server..\n");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
             out.flush();
-            out.writeObject(topic);                        //send
+            message = peerID+"-"+topic;
+            out.writeObject(message);                        //send
             out.flush();
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
             message = in.readObject().toString();                  //store received message into message
             /////////////////////////////////////////////////////////////////////////////
-            if  (message.trim().equals("File not found")) {        //check the file index existence in the server based on the server message
+            if  (message.trim().equals("Topic not found")) {        //check the file index existence in the server based on the server message
 
-                System.out.println("File not found !\n");
+                System.out.println("Topic not found !\n");
             }
             else {
-                System.out.println( "You subscribing request to topic ("+topic+ ") succeded"); //list the peers who have the file
+                System.out.println( "Your subscribing request to topic ("+topic+ ") succeeded \n"); //list the peers who have the file
                 System.out.print(message);
             }
             /////////////////////////////////////////////////////////////////////////////
@@ -181,7 +182,7 @@ public class MessageHandler {
 
             FileWriter writer = new FileWriter(folder+"/"+fileName.trim(),true);//initiate writer
             /////////////////////////////////////////////////////////////////////////////
-            writer.write(fileContent);                                //write
+            writer.write(fileContent+"\n");                                //write
             writer.close();                                           //close writer
         }
         catch(UnknownHostException unknownHost){                      //To Handle Unknown Host Exception
