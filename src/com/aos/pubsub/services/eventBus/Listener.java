@@ -1,15 +1,23 @@
 package com.aos.pubsub.services.eventBus;
 
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Date;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import com.aos.pubsub.services.model.Message;
+import com.aos.pubsub.services.model.MessageMarker;
+import com.aos.pubsub.services.model.TopicModel;
 
 
 
@@ -18,12 +26,12 @@ import java.util.Date;
  */
 public class Listener extends Thread {
     Socket conn;
-    String input;
-    int listeningPort, registeringPort = 60000, searchingPort = 60001;    //each port hold a deffirent function
+    ObjectMapper mapper = new ObjectMapper();
+    int listeningPort, publishTopicPort = 60000, publishMessagePort = 60001;    //each port hold a deffirent function
     static int maxsize = 0;
     /* create a hash map table that holds a concurrent hash map to assure synchronization
     *  each hash element contains a string ID (file name) and array of Messages*/
-    static volatile Map<String, Message[] > indexBus = new ConcurrentHashMap<String, Message[] >();
+    static volatile Map<String, List<Message>> indexBus = new ConcurrentHashMap<String, List<Message>>();
 
     /*********************************************************************************************/
 
@@ -35,54 +43,64 @@ public class Listener extends Thread {
     /*********************************************************************************************/
 
     public synchronized void run() {
-        if (listeningPort == registeringPort)           //call Register_a_File() if its port is connected with a peer
-            Register_a_File();
+        if (listeningPort == publishTopicPort)           //call Register_a_File() if its port is connected with a peer
+        	publishTopic();
             /////////////////////////////////////////////////////////////////////////////
-        else if (listeningPort == searchingPort)        //call Register_a_File() if its port is connected with a peer
-            Search_for_a_File();
+        else if (listeningPort == publishMessagePort)        //call Register_a_File() if its port is connected with a peer
+        publishMessage();
     }
 
     /*********************************************************************************************/
 
-    synchronized void Register_a_File() {
+    synchronized void publishTopic() {
         try {
-            int peerID;                             // define an integer peer ID which is the  peer port
-            Message m;                              //define a message object
-            String[] inputArray;                    //String array used for splitting the received message
+            String topicName;                             // define an integer peer ID which is the  peer port
+            List<Message> messageList;                    //String array used for splitting the received message
             /////////////////////////////////////////////////////////////////////////////
-            String peerIP = conn.getInetAddress().getHostName();    //save the peer IP into peerIP
+            String pubIP = conn.getInetAddress().getHostName();    //save the peer IP into peerIP
             ObjectInputStream in = new ObjectInputStream(conn.getInputStream()); //initiate object input stream to read from peer
-            input = (String) in.readObject();               //read
-            /////////////////////////////////////////////////////////////////////////////
-            inputArray = input.split("-");            //split the incoming message to adapt the local format
-            peerID = Integer.parseInt(inputArray[0]);        // store peer ID
-            System.out.println("Peer number: " + peerIP +" "+ peerID+ " connected.\n");
-            System.out.println("File " + input + " index created in the server \n");
-            /////////////////////////////////////////////////////////////////////////////
-            Date date = new Date();
-            /////////////////////////////////////////////////////////////////////////////
-            m = new Message(Integer.toString(peerID), peerIP, "R", inputArray[1], date); //new Message object with values
-            List<Message> current1 = new ArrayList<Message>();      //initiating a list
-            Message[] current = indexBus.get(inputArray[1]);        //store the current list of a hasmapkey into the list
-            Message[] m2;                                           //m2 will hold the new list
-            if(indexBus.containsKey(inputArray[1])) {               //check if there is an existing list of the same topic
-                m2 = new Message[current.length + 1];
-                for (int i = 0; i <= current.length; i++) {
-                    if (i < current.length) {                       //store the old list to the new one
-                        m2[i] = current[i];
-                    } else {
-                        m2[i] = m;                                  //store the new value to the list
-                    }
-                }
+            MessageMarker messageMarker;
+            String recievedString = null;
+            
+            try{
+            	recievedString = (String) in.readObject();               //read
+            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+           }catch(JsonMappingException  | JsonParseException jEx){
+        	   messageMarker =  mapper.readValue(recievedString, Message.class);
+           }
+            TopicModel topic = null;
+            Message messageModel = null;
+            
+            if(messageMarker instanceof TopicModel){
+            	topic = (TopicModel) messageMarker;
+            	long createdDate = new Date().getTime();
+                topic.setCreatedOn(createdDate);
+                topic.setUpdatedOn(createdDate);
+                messageList = topic.getMessageList(); 
+                topicName = topic.getTopicName();   
+                if(messageList == null){
+                	messageList = new ArrayList<Message>();
+                	topic.setMessageList(messageList);
+                 }  
+              /*  for(int index = 0 ; index < messageList.size() ; index++){
+                	Message m = new Message(index, messageList.get(index).getData(),topicName);
+                	topic.getMessageList().add(m);
+            	 }*/
+                	System.out.println("Topic " + topicName + "  created in the event bus \n");
+                    /////////////////////////////////////////////////////////////////////////////
+                    indexBus.put(topicName, messageList);             //store the hashmap element
+               
+                 
+            }else{
+            	System.out.println("Invalid object passed . returning....");
+            	
             }
+            
             /////////////////////////////////////////////////////////////////////////////
-                else                                                //if the is no existing topic, store new topic
-                {
-                    m2 = new Message[1];
-                    m2[0] = m;
-                }
-            /////////////////////////////////////////////////////////////////////////////
-                indexBus.put(inputArray[1].trim(), m2);             //store the hashmap element
+                  //split the incoming message to adapt the local format
+
+             		// store peer ID
+            
                 in.close();                                         //close reader
                 conn.close();                                       //close connection
             }
@@ -107,42 +125,60 @@ public class Listener extends Thread {
 
     /*********************************************************************************************/
 
-    synchronized void Search_for_a_File() {
-        String reply="";
+    synchronized void publishMessage() {
         try {
+            String topicName;                             // define an integer peer ID which is the  peer port
+            List<Message> messageList;                    //String array used for splitting the received message
             /////////////////////////////////////////////////////////////////////////////
-            String peerIP = conn.getInetAddress().getHostName(); //store peer IP
-            System.out.println("Peer number: " + peerIP + " connected.\n");
-            ObjectInputStream in = new ObjectInputStream(conn.getInputStream()); //define object reader
-            input = (String) in.readObject();                           //read
-            /////////////////////////////////////////////////////////////////////////////
-            if (indexBus.containsKey(input.trim())) {                   //if topic list exist
-                Message [] current = indexBus.get(input.trim());        //store topic list into array
-                 for(int i=0; i<current.length;i++) {                   //read the array elements and store as a reply
-                     reply = reply+"Peer ID: "+current[i].id + ", Peer IP: " + current[i].ip + "\n";
-                }
-            } else {
-                reply = "File not found\n";                             //topic with received name is not registered on the server
+            String pubIP = conn.getInetAddress().getHostName();    //save the peer IP into peerIP
+            ObjectInputStream in = new ObjectInputStream(conn.getInputStream()); //initiate object input stream to read from peer
+            MessageMarker messageMarker;
+            String recievedString = null;
+            
+            try{
+            	recievedString = (String) in.readObject();               //read
+            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+           }catch(JsonMappingException  | JsonParseException jEx){
+        	   messageMarker =  mapper.readValue(recievedString, Message.class);
+           }
+            TopicModel topic = null;
+            Message messageModel = null;
+            
+            if(messageMarker instanceof Message){
+            	messageModel = (Message)messageMarker;
+            	String topicNameStr = messageModel.getTopicName();
+            	messageList  = indexBus.get(topicNameStr);
+            	Message m = new Message(messageList.size(), messageModel.getData(),topicNameStr );
+            	if(messageList != null){
+            		messageList.add(m);
+            	}
+            	indexBus.put(topicNameStr, messageList);
+            	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
+            }else{
+            	System.out.println("Invalid object passed . returning....");
+            	
             }
+            
             /////////////////////////////////////////////////////////////////////////////
-            ObjectOutputStream out = new ObjectOutputStream(conn.getOutputStream()); //define object writer
-            out.writeObject(reply);                                                  //write the reply to the peer
-            out.flush();
-            /////////////////////////////////////////////////////////////////////////////
-            in.close();                                                 //close reader
-            out.close();                                                //close writer
-            conn.close();                                               //close connection to the peer
-        }
+                  //split the incoming message to adapt the local format
+
+             		// store peer ID
+            
+                in.close();                                         //close reader
+                conn.close();                                       //close connection
+            }
+        /////////////////////////////////////////////////////////////////////////////
         catch(UnknownHostException unknownHost){                                           //To Handle Unknown Host Exception
             System.err.println("host not available..!");
         }
         catch(IOException ioException){                                                    //To Handle Input-Output Exception
             ioException.printStackTrace();
         }
-        catch (Exception e) {                                         //track general errors
-            System.out.println(e.toString());
+         catch (Exception e) {                                      //track general errors
             e.printStackTrace();
+            System.out.println(e.toString());
         }
+
         finally {
             System.out.println("Type the action number as following:");
             System.out.println("1. To exit.");

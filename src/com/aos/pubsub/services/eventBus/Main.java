@@ -5,11 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.codehaus.jackson.map.ObjectMapper;
 public class Main extends Thread{
 
     int port;
+    
     static ThreadPoolExecutor executor;
     Main(int port)                                      //Main constructor that receive port number
     {
@@ -47,6 +50,7 @@ public class Main extends Thread{
     /*********************************************************************************************/
 
     public synchronized void run(){
+    	System.out.println("PORT "+port);
         try {
             ServerSocket ssock = new ServerSocket(port); // create a socket for both search or register listeners
             while (true) {                                 //keep listening for peers
