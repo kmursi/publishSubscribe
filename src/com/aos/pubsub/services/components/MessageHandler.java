@@ -134,7 +134,7 @@ public class MessageHandler {
 
     /*********************************************************************************************/
 
-    public void Search_for_a_File(String fileName)                  //search file on the server
+    public void Subscribe_Request(String topic)                  //search file on the server
     {
         String message;
         try{
@@ -143,7 +143,7 @@ public class MessageHandler {
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
             out.flush();
-            out.writeObject(fileName);                             //send
+            out.writeObject(topic);                        //send
             out.flush();
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
             message = in.readObject().toString();                  //store received message into message
@@ -153,7 +153,7 @@ public class MessageHandler {
                 System.out.println("File not found !\n");
             }
             else {
-                System.out.println( "File:("+fileName+ ") was found at peer\\peers:\n"); //list the peers who have the file
+                System.out.println( "You subscribing request to topic ("+topic+ ") succeded"); //list the peers who have the file
                 System.out.print(message);
             }
             /////////////////////////////////////////////////////////////////////////////
