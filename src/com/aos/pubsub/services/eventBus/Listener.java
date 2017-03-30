@@ -154,20 +154,32 @@ public class Listener extends Thread {
             	topicName = messageArray[1];
             	if(indexBus.containsKey(topicName))
             	{
-            		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
-                	reply="You are subcribed to "+topicName;
+            		
+                	////////////////////////////////////////////////////////////
                 	SubscribtionModel subModel = new SubscribtionModel();
                 	//subModel.setPort(port);
                 	subModel.setIP(subIP);
                 	subModel.setTopicName(topicName);
                 	Set<String>  list = topicSubscibtionList.get(subModel.getTopicName());
+                	
                 	if(list == null){
                 		list = new HashSet<>();
                 		
                 	}
                 	list.add(subIP);
-                	topicSubscibtionList.put(subModel.getTopicName(),list);
-                	Subscribtion_Recorder(subIP+"-"+recievedString);
+                	//topicSubscibtionList.put(subModel.getTopicName(),list);
+                	//////////////////////////////////////////////////////////////
+                	if(topicSubscibtionList.containsKey(topicName))
+                	{
+                		reply="You are already subcribed to "+topicName+" !\n";
+                	}
+                	else
+                	{
+                		Subscribtion_Recorder(subIP+"-"+recievedString);
+                		topicSubscibtionList.put(subModel.getTopicName(),list);
+                		reply="You are now subcribing topic '"+topicName+"'";
+                		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
+                	}
             	}
             	else
                 {
@@ -282,4 +294,6 @@ public class Listener extends Thread {
             Thread.currentThread().stop();
         }
     }
+    
+    
 }

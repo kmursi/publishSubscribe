@@ -177,7 +177,7 @@ public class MessageHandler {
                 System.out.println("Topic not found !\n");
             }
             else {
-                System.out.println( "Your subscribing request to topic ("+topic+ ") succeeded \n"); //list the peers who have the file
+                //System.out.println( "Your subscribing request to topic ("+topic+ ") succeeded \n"); //list the peers who have the file
                 System.out.print(message);
             }
             /////////////////////////////////////////////////////////////////////////////
