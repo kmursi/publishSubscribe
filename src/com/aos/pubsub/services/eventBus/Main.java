@@ -56,7 +56,7 @@ public class Main extends Thread{
             while (true) {                                 //keep listening for peers
                 Socket sock = null;
                 sock = ssock.accept();                     //accept peer connection
-                Listener listener = new Listener(sock,port);
+                EventBusListener listener = new EventBusListener(sock,port);
                 executor.execute(listener);
                 //new Listener(sock,port).start();         // create new thread
             }

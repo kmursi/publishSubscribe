@@ -102,8 +102,10 @@ public class MessageHandler {
     		
                 socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
                 System.out.println("\nConnected to the server..\n");
-                String csvFile = "D:\\TTU\\SPM\\workspace\\publishScubscribe\\src\\com\\aos\\pubsub\\services\\components\\countrycodes.csv";
                 
+                //File folder = new File("./compnents");
+                //FileWriter writer = new FileWriter(folder+"/countrycodes.csv",true);
+                String csvFile = "/Users/kmursi/Desktop/git/publishSubscribe/src/com/aos/pubsub/services/components/countrycodes.csv";
                 Message m1 = (Message) messageModel;
                 reader = new CSVReader(new FileReader(csvFile));
                 String[] line;

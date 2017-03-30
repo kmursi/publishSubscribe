@@ -30,7 +30,7 @@ import com.aos.pubsub.services.model.TopicModel;
 /**
  * Created by kmursi on 3/10/17.
  */
-public class Listener extends Thread {
+public class EventBusListener extends Thread {
     Socket conn;
     ObjectMapper mapper = new ObjectMapper();
     int listeningPort, publishTopicPort = 60000, publishMessagePort = 60001,SubscribtionRequest = 60002;    //each port hold a deffirent function
@@ -43,7 +43,7 @@ public class Listener extends Thread {
 
     /*********************************************************************************************/
 
-    public Listener(Socket s, int port) {
+    public EventBusListener(Socket s, int port) {
         conn = s;                                       // let the local socket to have the value of the received one
         this.listeningPort = port;                      // let the local port to have the value of the received one
     }
@@ -179,6 +179,8 @@ public class Listener extends Thread {
                 		topicSubscibtionList.put(subModel.getTopicName(),list);
                 		reply="You are now subcribing topic '"+topicName+"'";
                 		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
+                		//SubscriberHandler s = new SubscriberHandler(subIP.trim(),peerID, topicName);
+                		//s.start();
                 	}
             	}
             	else
