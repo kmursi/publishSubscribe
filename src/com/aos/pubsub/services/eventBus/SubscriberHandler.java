@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -28,17 +29,68 @@ public class SubscriberHandler extends Thread {
 	String IP , topicName;
 	int port;
 	ObjectOutputStream out;
+	String subIP;
+	Socket socket;
 	private ObjectMapper mapper = new ObjectMapper();
-	static volatile Map<String, List<Message>> sentMessage = new ConcurrentHashMap<String, List<Message>>();
-	public SubscriberHandler(String IP , int port, String topicName)
+	static volatile  List<Message> subscriberMessage ;
+	public SubscriberHandler(Socket socket,int port)
 	{
-		this.IP=IP;
 		this.port=port;
-		this.topicName=topicName;
+		subIP = socket.getInetAddress().getHostName(); 
+		this.socket=socket;
 	}
 	public synchronized void run()
 	{
 		//Socket socket = new Socket(IP, port);
+		//ServerSocket socket = null;
+		try 
+		{
+			//socket = new ServerSocket(port);
+			String receivedMessage;
+			Message message;
+			//while(true)
+			{
+				ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+				out = new ObjectOutputStream(socket.getOutputStream()); 
+				if(!(receivedMessage = (String)in.readObject()).equals(null))
+				{
+					System.out.println("\nhi splitter\n");
+				String splitter [] = receivedMessage.split("-");
+				subscriberMessage = EventBusListener.indexBus.get(splitter[0]);
+				if(Integer.parseInt(splitter[1].trim())<subscriberMessage.size())
+				{
+					for(int i=Integer.parseInt(splitter[1].trim())+1; i<subscriberMessage.size();i++)
+					{
+						message=subscriberMessage.get(i);
+						System.out.println(message.getTopicName());
+						//pushToSubscriber(message);
+						System.out.println("\nConnected to the subscriber..\n");
+			              //initiate writer
+			            out.flush();
+			            out.writeObject(mapper.writeValueAsString(message));                                 //send the message
+			            out.flush();
+					}
+				}
+			}
+			}
+			socket.close();
+		} 
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally
+		{
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
 	}
 	
@@ -49,11 +101,11 @@ public class SubscriberHandler extends Thread {
 	}
 	
 	//This method handles the sending to the subscriber
-	void pushToSubscriber(Socket socket, MessageMarker marker )
+	void pushToSubscriber( MessageMarker marker )
 	{
 		try
 		{
-			System.out.println("\nConnected to the server..\n");
+			System.out.println("\nConnected to the subscriber..\n");
             out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
             out.flush();
             out.writeObject(mapper.writeValueAsString(marker));                                 //send the message

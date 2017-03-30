@@ -1,6 +1,7 @@
 package com.aos.pubsub.services.components;
 
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -12,10 +13,14 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.aos.pubsub.services.eventBus.SubscriberHandler;
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
+import com.aos.pubsub.services.model.TopicModel;
 import com.opencsv.CSVReader;
 
 public class MessageHandler {
@@ -194,7 +199,65 @@ public class MessageHandler {
             e.printStackTrace();
         }
     }
-
+    
+    public void pullRequest(String topicName, int lastMessageIndex)
+    {
+    	MessageMarker messageMarker;
+    	Message messageModel = null;
+    	String message=topicName+"-"+lastMessageIndex;
+        try{
+            socket = new Socket(serverIP, 60003);              //initiate socket withe the server through server searching port
+            System.out.println("\nConnected to the server..\n");
+            /////////////////////////////////////////////////////////////////////////////
+            out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
+            
+            out.flush();
+            System.out.println("\nhi\n");
+            out.writeObject(message);                        //send
+            out.flush();
+            System.out.println("\nhi\n");
+            /////////////////////////////////////////////////////////////////////////////
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
+            String recievedString;
+            while( true)
+            {//store received message into message
+            /////////////////////////////////////////////////////////////////////////////
+            	recievedString = in.readObject().toString();
+            	
+            try{
+            	//recievedString = (String) in.readObject();               //read
+            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+           }catch(JsonMappingException  | JsonParseException jEx){
+        	   messageMarker =  mapper.readValue(recievedString, Message.class);
+           }
+            
+            if(messageMarker instanceof Message){
+            	messageModel = (Message)messageMarker;
+            	String topicNameStr = messageModel.getTopicName();
+            	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
+            }else{
+            	System.out.println("Invalid object passed . returning....");
+            	
+            }
+            }
+            /////////////////////////////////////////////////////////////////////////////
+            //in.close();                                            //close reader
+            //out.close();                                           //close writer
+            //socket.close();                                        //close connection
+        }
+        catch (EOFException exc)
+    	{
+        	System.out.println("Message received successfully ! ");
+    	}
+        catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
+            System.err.println("host not available..!");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
     /*********************************************************************************************/
 
     public void Create_Local_File(String fileName,String fileContent) //write the downloaded file into the local director

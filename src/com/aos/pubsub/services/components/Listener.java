@@ -11,6 +11,25 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+
+import com.aos.pubsub.services.model.Message;
+import com.aos.pubsub.services.model.MessageMarker;
+import com.aos.pubsub.services.model.TopicModel;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import com.aos.pubsub.services.model.Message;
+import com.aos.pubsub.services.model.MessageMarker;
+import com.aos.pubsub.services.model.SubscribtionModel;
+import com.aos.pubsub.services.model.TopicModel;
+
 //PeerServer
 class Listener extends Thread{
     int port;
@@ -18,6 +37,7 @@ class Listener extends Thread{
     ServerSocket server;
     Socket connection;
     BufferedReader br = null;
+    ObjectMapper mapper = new ObjectMapper();
     /*********************************************************************************************/
     public Listener(int port) {
         this.port = port;
@@ -32,54 +52,53 @@ class Listener extends Thread{
         try {
                 String peerIP = connection.getInetAddress().getHostName();
                 System.out.println("** Peer " + peerIP+" connected..\n");
+                ObjectOutputStream out = new ObjectOutputStream(connection.getOutputStream()); //initiate writer
+                out.flush();
+                out.writeObject(1);
                 ObjectInputStream in = new ObjectInputStream(connection.getInputStream()); //initiate reader
                 message = (String)in.readObject();
                 /////////////////////////////////////////////////////////////////////////////
-                ObjectOutputStream out = new ObjectOutputStream(connection.getOutputStream()); //initiate writer
-                out.flush();
-                String content=null;
-                try
-                {
-                    final File f = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath()); //get the jar directory
-                    File parentFolder = new File(f.getParent());                                     //get the parent folder of the jar
-                    File folder = new File(parentFolder.getParent()+"/src/main/resources"); //get the resources folder path
-                    FileReader fr = new FileReader(folder+ "/"+message.trim());          //Reads the filename into file reader
-                    BufferedReader br = new BufferedReader(fr);
-                    String value=new String();
-                    while((value=br.readLine())!=null)                //Appending the content read from the BufferedReader object until it is null and stores it in str
-                        content=content+value+"\r\n";                 //append the content out of the read lines
-                    br.close();
-                    fr.close();
-                    System.out.println("File "+message+" has been sent successfully to peer "+peerIP);
+                
+                while(true){
+                	if(connection.getInputStream().available() != -1)
+                	{
+                	in = new ObjectInputStream(connection.getInputStream()); //initiate object input stream to read from peer
+                	MessageMarker messageMarker;
+                	String recievedString = null;
+                
+                try{
+                	recievedString = (String) in.readObject();               //read
+                	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+               }catch(JsonMappingException  | JsonParseException jEx){
+            	   messageMarker =  mapper.readValue(recievedString, Message.class);
+               }
+                TopicModel topic = null;
+                Message messageModel = null;
+                
+                if(messageMarker instanceof Message){
+                	messageModel = (Message)messageMarker;
+                	String topicNameStr = messageModel.getTopicName();
+                	//messageList  = indexBus.get(topicNameStr);
+                	//Message m = new Message(messageList.size(), messageModel.getData(),topicNameStr );
+                	
+                	System.out.println("Received new news  "+messageModel.getData() + " in topic "+topicNameStr );
+                }else{
+                	System.out.println("Invalid object passed . returning....");
+                	
                 }
-                catch(UnknownHostException unknownHost){               //To Handle Unknown Host Exception
-                    System.err.println("host not available..!");
-                }
-                catch(Exception e)
-                {
-                    System.out.println("File not found");
-                    content="File not found".trim();                //file not found message will be sent to the peer
-                }
+                
                 /////////////////////////////////////////////////////////////////////////////
+                      //split the incoming message to adapt the local format
 
-                out.writeObject(content);                           //content sending to the peer
-                out.flush();                                        //close writer
-                in.close();                                         //close reader
-                connection.close();                                 //close connection
-
+                 		// store peer ID
+                
+                }
         }
-
-        catch(ClassNotFoundException n){                            //To Handle Exception for Data Received in Unsupported or Unknown Formats
-            System.err.println("data format is unknown ..!");
         }
-        catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
-            System.err.println("host not available..!");
+        catch(Exception e)
+        {
+        	
         }
-        catch(IOException ioException){                            //To Handle Input-Output Exceptions
-            ioException.printStackTrace();
-        } finally {
-            Thread.currentThread().stop();                         //end the current thread
+    /*********************************************************************************************/
         }
     }
-    /*********************************************************************************************/
-}

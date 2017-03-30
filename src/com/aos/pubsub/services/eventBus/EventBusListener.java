@@ -33,7 +33,7 @@ import com.aos.pubsub.services.model.TopicModel;
 public class EventBusListener extends Thread {
     Socket conn;
     ObjectMapper mapper = new ObjectMapper();
-    int listeningPort, publishTopicPort = 60000, publishMessagePort = 60001,SubscribtionRequest = 60002;    //each port hold a deffirent function
+    int listeningPort, publishTopicPort = 60000, publishMessagePort = 60001,SubscribtionRequest = 60002, subscriberPullRequest=60003;    //each port hold a deffirent function
     static int maxsize = 0;
     /* create a hash map table that holds a concurrent hash map to assure synchronization
     *  each hash element contains a string ID (file name) and array of Messages*/
@@ -58,6 +58,8 @@ public class EventBusListener extends Thread {
         	receivingMessage();
         else if (listeningPort == SubscribtionRequest)        //call Register_a_File() if its port is connected with a peer
         	Subscribe_Topic_Request();
+        else if (listeningPort == subscriberPullRequest)        //call Register_a_File() if its port is connected with a peer
+        	subscriberPullRequest();
     }
 
     /*********************************************************************************************/
@@ -154,14 +156,12 @@ public class EventBusListener extends Thread {
             	topicName = messageArray[1];
             	if(indexBus.containsKey(topicName))
             	{
-            		
                 	////////////////////////////////////////////////////////////
                 	SubscribtionModel subModel = new SubscribtionModel();
                 	//subModel.setPort(port);
                 	subModel.setIP(subIP);
                 	subModel.setTopicName(topicName);
                 	Set<String>  list = topicSubscibtionList.get(subModel.getTopicName());
-                	
                 	if(list == null){
                 		list = new HashSet<>();
                 		
@@ -179,8 +179,7 @@ public class EventBusListener extends Thread {
                 		topicSubscibtionList.put(subModel.getTopicName(),list);
                 		reply="You are now subcribing topic '"+topicName+"'";
                 		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
-                		//SubscriberHandler s = new SubscriberHandler(subIP.trim(),peerID, topicName);
-                		//s.start();
+                		
                 	}
             	}
             	else
@@ -205,6 +204,13 @@ public class EventBusListener extends Thread {
         {
         	
         }  
+    }
+    
+    public void subscriberPullRequest()
+    {
+    	System.out.println("\nhi\n");
+    	new SubscriberHandler(conn,listeningPort).start();
+    	System.out.println("\nhi\n");
     }
     
     public void Subscribtion_Recorder(String record) //write the downloaded file into the local director

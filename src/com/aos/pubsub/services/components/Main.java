@@ -67,6 +67,7 @@ public class Main extends Thread{
             System.out.println("2. Register a message in topic");
             System.out.println("3. Subscription request");
             System.out.println("4. To exit.");
+            System.out.println("5. Pull request");
             System.out.println("*********************************************************************************************\n");
             Scanner in = new Scanner(System.in);
             userInput = in.nextLine();                         //get the chosen service from the user
@@ -105,6 +106,14 @@ public class Main extends Thread{
             {
                 System.out.println("Exiting...");
                 System.exit(0);                         //exit the program
+            }
+            else if (userInput.equals("5"))                    //if user entered 6
+            {
+            	System.out.println("Enter the topic name");
+                String topicName = in.nextLine();  
+                System.out.println("Enter the last index");
+                String lastMessageIndex = in.nextLine();
+                fh.pullRequest(topicName, Integer.parseInt(lastMessageIndex)); //exit the program
             }
             else
             {
