@@ -2,6 +2,7 @@ package com.aos.pubsub.services.components;
 
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,7 +14,9 @@ import java.util.regex.Pattern;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
+import com.opencsv.CSVReader;
 
 public class MessageHandler {
 	private ObjectMapper mapper = new ObjectMapper();
@@ -94,13 +97,26 @@ public class MessageHandler {
     public void publishMessage(MessageMarker messageModel)                      //Register with index server Method
     {
         /////////////////////////////////////////////////////////////////////////////
+    	CSVReader reader = null;
     	try {
+    		
                 socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
                 System.out.println("\nConnected to the server..\n");
-                out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
-                out.flush();
-                out.writeObject(mapper.writeValueAsString(messageModel));                                 //send the message
-                out.flush();
+                String csvFile = "D:\\TTU\\SPM\\workspace\\publishScubscribe\\src\\com\\aos\\pubsub\\services\\components\\countrycodes.csv";
+                
+                Message m1 = (Message) messageModel;
+                reader = new CSVReader(new FileReader(csvFile));
+                String[] line;
+                while ((line = reader.readNext()) != null) {
+                   Message m = new Message();
+                   m.setTopicName(m1.getTopicName());
+                   m.setData(line[0]);
+                   out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
+                   out.flush();
+                   out.writeObject(mapper.writeValueAsString(m));                                 //send the message
+                   out.flush();
+                }
+               
                 /////////////////////////////////////////////////////////////////////////////
               //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
                 out.close();                                               //close writer
@@ -111,7 +127,14 @@ public class MessageHandler {
             }
             catch(Exception e ){                                           //To Handle Input-Output Exception
                 e.printStackTrace();
-            }
+            }finally {
+            	try {
+					reader.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
     }
 
 

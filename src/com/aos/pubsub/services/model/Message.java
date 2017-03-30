@@ -10,7 +10,7 @@ public class Message implements MessageMarker,Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	int id;        //holds peer ID
+	int id;        //the seq number
     String data;      //holds message data or file name
     String topicName;
     public Message(){

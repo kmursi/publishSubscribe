@@ -1,28 +1,29 @@
 package com.aos.pubsub.services.eventBus;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.aos.pubsub.services.components.Main;
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
-import com.aos.pubsub.services.model.TopicModel;
 import com.aos.pubsub.services.model.SubscribtionModel;
+import com.aos.pubsub.services.model.TopicModel;
 
 
 
@@ -37,6 +38,8 @@ public class Listener extends Thread {
     /* create a hash map table that holds a concurrent hash map to assure synchronization
     *  each hash element contains a string ID (file name) and array of Messages*/
     static volatile Map<String, List<Message>> indexBus = new ConcurrentHashMap<String, List<Message>>();
+    
+    static volatile Map<String, Set<String>> topicSubscibtionList = new ConcurrentHashMap<String, Set<String>>();
 
     /*********************************************************************************************/
 
@@ -49,17 +52,17 @@ public class Listener extends Thread {
 
     public synchronized void run() {
         if (listeningPort == publishTopicPort)           //call Register_a_File() if its port is connected with a peer
-        	publishTopic();
+        	receivingTopicRequest();
             /////////////////////////////////////////////////////////////////////////////
         else if (listeningPort == publishMessagePort)        //call Register_a_File() if its port is connected with a peer
-        publishMessage();
+        	receivingMessage();
         else if (listeningPort == SubscribtionRequest)        //call Register_a_File() if its port is connected with a peer
         	Subscribe_Topic_Request();
     }
 
     /*********************************************************************************************/
 
-    synchronized void publishTopic() {
+    synchronized void receivingTopicRequest() {
         try {
             String topicName;                             // define an integer peer ID which is the  peer port
             List<Message> messageList;                    //String array used for splitting the received message
@@ -153,6 +156,17 @@ public class Listener extends Thread {
             	{
             		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
                 	reply="You are subcribed to "+topicName;
+                	SubscribtionModel subModel = new SubscribtionModel();
+                	//subModel.setPort(port);
+                	subModel.setIP(subIP);
+                	subModel.setTopicName(topicName);
+                	Set<String>  list = topicSubscibtionList.get(subModel.getTopicName());
+                	if(list == null){
+                		list = new HashSet<>();
+                		
+                	}
+                	list.add(subIP);
+                	topicSubscibtionList.put(subModel.getTopicName(),list);
                 	Subscribtion_Recorder(subIP+"-"+recievedString);
             	}
             	else
@@ -203,15 +217,17 @@ public class Listener extends Thread {
         }
     }
     
-    synchronized void publishMessage() {
+    synchronized void receivingMessage() {
         try {
             String topicName;                             // define an integer peer ID which is the  peer port
             List<Message> messageList;                    //String array used for splitting the received message
             /////////////////////////////////////////////////////////////////////////////
             String pubIP = conn.getInetAddress().getHostName();    //save the peer IP into peerIP
-            ObjectInputStream in = new ObjectInputStream(conn.getInputStream()); //initiate object input stream to read from peer
-            MessageMarker messageMarker;
-            String recievedString = null;
+            ObjectInputStream in = null;
+            while(conn.getInputStream().available() != -1){
+            	in = new ObjectInputStream(conn.getInputStream()); //initiate object input stream to read from peer
+            	MessageMarker messageMarker;
+            	String recievedString = null;
             
             try{
             	recievedString = (String) in.readObject();               //read
@@ -241,11 +257,14 @@ public class Listener extends Thread {
                   //split the incoming message to adapt the local format
 
              		// store peer ID
-            
+           }
                 in.close();                                         //close reader
                 conn.close();                                       //close connection
             }
         /////////////////////////////////////////////////////////////////////////////
+        catch(EOFException eof){
+    	   System.out.println("finished publishing topics");
+       }
         catch(UnknownHostException unknownHost){                                           //To Handle Unknown Host Exception
             System.err.println("host not available..!");
         }

@@ -7,8 +7,6 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-
-import org.codehaus.jackson.map.ObjectMapper;
 public class Main extends Thread{
 
     int port;

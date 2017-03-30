@@ -2,6 +2,7 @@ package com.aos.pubsub.services.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 
@@ -18,6 +19,8 @@ public class TopicModel implements Serializable,MessageMarker{
 	long createdOn;
 	boolean durable;
 	long updatedOn;
+	Set<String> subscriberList;
+	
 	public String getTopicName() {
 		return topicName;
 	}
