@@ -1,12 +1,8 @@
 package com.aos.pubsub.services.components;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 import com.aos.pubsub.services.model.Message;
@@ -123,86 +119,7 @@ public class Main extends Thread{
         }
     }
 
-    /*********************************************************************************************/
 
-    public synchronized void run() //listening thread
-    {
-        try {
-            ServerSocket ssock = new ServerSocket(port); //initiate a socket that listen to the specified port
-            while (true) {                               //keep listening
-                Socket sock = null;
-                sock = ssock.accept();                   //accept peer connection
-                new Listener(sock,port).start();         //create a new thread for every new connection
-            }
-        }
-        catch(UnknownHostException unknownHost){         //To Handle Unknown Host Exception
-            System.err.println("host not available..!");
-        }
-        catch(IOException ioException){                  //To Handle Input-Output Exception
-            ioException.printStackTrace();
-        }
-    }
-
-    /*********************************************************************************************/
-
-    public static void list_my_files()
-    {
-        try {
-            final File f = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath()); //get the jar directory
-            File parentFolder = new File(f.getParent());                                     //get the parent folder of the jar
-            File folder = new File(parentFolder.getParent()+"/peer1/src/main/resources"); //get the resources folder path
-            File[] listOfFiles = folder.listFiles();                                        //store files into file array
-            if (!listOfFiles.equals(null)) {                                                //if folder is not empty
-                for (int i = 0; i < listOfFiles.length; i++) {
-                    if (listOfFiles[i].isFile() && listOfFiles[i].getName().contains("txt"))//make sure it is a file and .txt
-                        System.out.println("File: " + listOfFiles[i].getName());           //print list of files
-                }
-            }
-        }catch (Exception e)
-        {
-            System.out.print(e.toString());
-        }
-    }
-
-    /*********************************************************************************************/
-/*
-    public static void register_all_files(File_Handler fh) {
-        try {
-            final File f = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath()); //get the jar directory
-            File parentFolder = new File(f.getParent());                                     //get the parent folder of the jar
-            File folder = new File(parentFolder.getParent()+"/peer1/src/main/resources"); //get the resources folder path
-            File[] listOfFiles = folder.listFiles();                                        //store files into file array
-            if (!listOfFiles.equals(null)) {                                                //if folder is not empty
-                for (int i = 0; i < listOfFiles.length; i++) {
-                    if (listOfFiles[i].isFile() && listOfFiles[i].getName().contains("txt")) //make sure it is a file and .txt
-                        fh.Register_a_File(listOfFiles[i].getName());                      //print list of files
-                }
-            }
-        }catch (Exception e)
-        {
-            System.out.print(e.toString());
-        }
-    }
-*/
-    /*static long get_performance_measurement_for_search_request(MessageHandler f, String fileName , int loop)
-    {
-        long sum=0;
-        try
-        {
-            for(int i=0 ;i<loop;i++)
-            {
-                long startTime = System.currentTimeMillis(); //store the current time
-                f.Search_for_a_File(fileName);
-                sum=sum+System.currentTimeMillis() - startTime;// time needed for the packet to return form the server
-            }
-            sum=sum/loop;                                       //calculate the average
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return sum;
-    }*/
 }
 
 

@@ -1,28 +1,17 @@
 package com.aos.pubsub.services.eventBus;
 
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.aos.pubsub.services.model.Message;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectMapper;
-import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
-import com.aos.pubsub.services.model.SubscribtionModel;
-import com.aos.pubsub.services.model.TopicModel;
+
 
 
 public class SubscriberHandler extends Thread {
@@ -32,7 +21,7 @@ public class SubscriberHandler extends Thread {
 	String subIP;
 	Socket socket;
 	private ObjectMapper mapper = new ObjectMapper();
-	static volatile  List<Message> subscriberMessage ;
+	List<Message> subscriberMessage ;
 	public SubscriberHandler(Socket socket,int port)
 	{
 		this.port=port;
@@ -41,37 +30,45 @@ public class SubscriberHandler extends Thread {
 	}
 	public synchronized void run()
 	{
-		//Socket socket = new Socket(IP, port);
-		//ServerSocket socket = null;
 		try 
 		{
 			//socket = new ServerSocket(port);
-			String receivedMessage;
+			String receivedMessage, topicName;
+			int lastMessage;
 			Message message;
 			//while(true)
 			{
 				ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-				out = new ObjectOutputStream(socket.getOutputStream()); 
+				out = new ObjectOutputStream(socket.getOutputStream());
 				if(!(receivedMessage = (String)in.readObject()).equals(null))
 				{
-					System.out.println("\nhi splitter\n");
+				//System.out.println("\nhi splitter\n");
 				String splitter [] = receivedMessage.split("-");
-				subscriberMessage = EventBusListener.indexBus.get(splitter[0]);
-				if(Integer.parseInt(splitter[1].trim())<subscriberMessage.size())
+				topicName=splitter[0].trim();
+				lastMessage=Integer.parseInt(splitter[1].trim());
+				/////////////////////////////////////////////////////////////////////////
+				while(socket.isConnected())
 				{
-					for(int i=Integer.parseInt(splitter[1].trim())+1; i<subscriberMessage.size();i++)
+					subscriberMessage = EventBusListener.indexBus.get(topicName);
+					if(lastMessage<subscriberMessage.size())
 					{
-						message=subscriberMessage.get(i);
-						System.out.println(message.getTopicName());
-						//pushToSubscriber(message);
-						System.out.println("\nConnected to the subscriber..\n");
-			              //initiate writer
-			            out.flush();
-			            out.writeObject(mapper.writeValueAsString(message));                                 //send the message
-			            out.flush();
+						subscriberMessage = EventBusListener.indexBus.get(topicName);
+						for(int i=Integer.parseInt(splitter[1].trim())+1; i<subscriberMessage.size();i++)
+						{
+							message=subscriberMessage.get(i);
+							System.out.println(message.getTopicName());
+							//pushToSubscriber(message);
+							System.out.println("\nConnected to the subscriber..\n");
+				              //initiate writer
+				            out.flush();
+				            out.writeObject(mapper.writeValueAsString(message));                                 //send the message
+				            out.flush();
+						}
+						lastMessage = subscriberMessage.size();
 					}
 				}
-			}
+				System.out.println("Subscriber "+subIP+":"+port+" has been disconnected..!");
+			  }
 			}
 			socket.close();
 		} 
@@ -92,12 +89,6 @@ public class SubscriberHandler extends Thread {
 			}
 		}
 		
-	}
-	
-	boolean chekcIfMessageNew(Map m)
-	{
-		
-		return false;
 	}
 	
 	//This method handles the sending to the subscriber

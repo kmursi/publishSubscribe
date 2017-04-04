@@ -2,6 +2,7 @@ package com.aos.pubsub.services.components;
 
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,18 +18,9 @@ import org.codehaus.jackson.map.JsonMappingException;
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
 import com.aos.pubsub.services.model.TopicModel;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.aos.pubsub.services.model.Message;
-import com.aos.pubsub.services.model.MessageMarker;
-import com.aos.pubsub.services.model.SubscribtionModel;
-import com.aos.pubsub.services.model.TopicModel;
 
 //PeerServer
 class Listener extends Thread{
@@ -38,67 +30,88 @@ class Listener extends Thread{
     Socket connection;
     BufferedReader br = null;
     ObjectMapper mapper = new ObjectMapper();
+    String serverIP, topicName;
+    int lastMessageIndex;
+    ObjectOutputStream out;
     /*********************************************************************************************/
     public Listener(int port) {
         this.port = port;
         System.out.println("Listening...");
     }
-    public Listener(Socket s , int port) {
-        connection=s;
-        this.port = port;
+    public Listener(String serverIP,String topicName , int lastMessageIndex) {
+        this.serverIP=serverIP;
+        this.topicName= topicName;
+        this.lastMessageIndex=lastMessageIndex;
     }
     /*********************************************************************************************/
     public synchronized void run() {
-        try {
-                String peerIP = connection.getInetAddress().getHostName();
-                System.out.println("** Peer " + peerIP+" connected..\n");
-                ObjectOutputStream out = new ObjectOutputStream(connection.getOutputStream()); //initiate writer
-                out.flush();
-                out.writeObject(1);
-                ObjectInputStream in = new ObjectInputStream(connection.getInputStream()); //initiate reader
-                message = (String)in.readObject();
-                /////////////////////////////////////////////////////////////////////////////
-                
-                while(true){
-                	if(connection.getInputStream().available() != -1)
-                	{
-                	in = new ObjectInputStream(connection.getInputStream()); //initiate object input stream to read from peer
-                	MessageMarker messageMarker;
-                	String recievedString = null;
-                
-                try{
-                	recievedString = (String) in.readObject();               //read
-                	messageMarker = mapper.readValue(recievedString, TopicModel.class);
-               }catch(JsonMappingException  | JsonParseException jEx){
-            	   messageMarker =  mapper.readValue(recievedString, Message.class);
-               }
-                TopicModel topic = null;
-                Message messageModel = null;
-                
-                if(messageMarker instanceof Message){
-                	messageModel = (Message)messageMarker;
-                	String topicNameStr = messageModel.getTopicName();
-                	//messageList  = indexBus.get(topicNameStr);
-                	//Message m = new Message(messageList.size(), messageModel.getData(),topicNameStr );
-                	
-                	System.out.println("Received new news  "+messageModel.getData() + " in topic "+topicNameStr );
-                }else{
-                	System.out.println("Invalid object passed . returning....");
-                	
-                }
-                
-                /////////////////////////////////////////////////////////////////////////////
-                      //split the incoming message to adapt the local format
-
-                 		// store peer ID
-                
-                }
+    	MessageMarker messageMarker;
+    	Message messageModel = null;
+    	String message=topicName+"-"+lastMessageIndex;
+        try{
+            Socket socket = new Socket(serverIP, 60003);              //initiate socket withe the server through server searching port
+            System.out.println("\nConnected to the server..\n");
+            /////////////////////////////////////////////////////////////////////////////
+            out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
+            
+            out.flush();
+            //System.out.println("\nhi\n");
+            out.writeObject(message);                        //send
+            out.flush();
+            //System.out.println("\nhi\n");
+            /////////////////////////////////////////////////////////////////////////////
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
+            String recievedString;
+            while(socket.isConnected())
+            {
+	            	while(socket.getInputStream().available() != -1)
+	            	{//store received message into message
+			            /////////////////////////////////////////////////////////////////////////////
+			            	recievedString = in.readObject().toString();
+			            	
+			            try{
+			            	//recievedString = (String) in.readObject();               //read
+			            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+			           }catch(JsonMappingException  | JsonParseException jEx){
+			        	   messageMarker =  mapper.readValue(recievedString, Message.class);
+			           }
+			            
+			            if(messageMarker instanceof Message){
+			            	messageModel = (Message)messageMarker;
+			            	String topicNameStr = messageModel.getTopicName();
+			            	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
+			            }else{
+			            	System.out.println("Invalid object passed . returning....");
+			            }
+			            
+	            	}
+	            	
+            }
+        
+            /////////////////////////////////////////////////////////////////////////////
+            in.close();                                            //close reader
+            out.close();                                           //close writer
+            socket.close();                                        //close connection
+            System.out.println("\nConncetion has lost with the eventBus!\n");
+            
+            System.out.println("*********************************************************************************************");
+            System.out.println("Type the action number as following:");
+            System.out.println("1. Register a topic with eventbus.");
+            System.out.println("2. Register a message in topic");
+            System.out.println("3. Subscription request");
+            System.out.println("4. To exit.");
+            System.out.println("5. Pull request");
+            System.out.println("*********************************************************************************************\n");
         }
+        catch (EOFException exc)
+    	{
+        	System.out.println("Message received successfully ! ");
+    	}
+        catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
+            System.err.println("host not available..!");
         }
-        catch(Exception e)
-        {
-        	
-        }
-    /*********************************************************************************************/
+        catch (Exception e) {
+            e.printStackTrace();
         }
     }
+}

@@ -175,7 +175,7 @@ public class EventBusListener extends Thread {
                 	}
                 	else
                 	{
-                		Subscribtion_Recorder(subIP+"-"+recievedString);
+                		Subscription_Recorder(subIP+"-"+recievedString);
                 		topicSubscibtionList.put(subModel.getTopicName(),list);
                 		reply="You are now subcribing topic '"+topicName+"'";
                 		System.out.println("Subscribtion request from "+subIP+":"+peerID+" accepted for topic "+topicName+"\n");
@@ -208,12 +208,12 @@ public class EventBusListener extends Thread {
     
     public void subscriberPullRequest()
     {
-    	System.out.println("\nhi\n");
+    	//System.out.println("\nhi\n");
     	new SubscriberHandler(conn,listeningPort).start();
-    	System.out.println("\nhi\n");
+    	//System.out.println("\nhi\n");
     }
     
-    public void Subscribtion_Recorder(String record) //write the downloaded file into the local director
+    public void Subscription_Recorder(String record) //write the downloaded file into the local director
     {
         try
         {
