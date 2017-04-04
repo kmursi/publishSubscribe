@@ -2,6 +2,8 @@ package com.aos.pubsub.services.eventBus;
 
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -101,7 +103,7 @@ public class EventBusListener extends Thread {
                 	System.out.println("Topic " + topicName + "  created in the event bus \n");
                     /////////////////////////////////////////////////////////////////////////////
                     indexBus.put(topicName, messageList);             //store the hashmap element
-               
+                    topicLog(messageMarker, "topic");
                  
             }else{
             	System.out.println("Invalid object passed . returning....");
@@ -213,6 +215,36 @@ public class EventBusListener extends Thread {
     	//System.out.println("\nhi\n");
     }
     
+    public void topicLog(MessageMarker message, String type)
+    {
+    	String path=null;
+    	if(type.equals("topic"))
+    	{
+    		path="/Topic_Log.txt";
+    	}
+    	else if (type.equals("message"))
+    	{
+    		path="/message_Log.txt";
+    	}
+    	FileOutputStream file;
+    	File folder = new File(".");
+		try {
+			file = new FileOutputStream(folder+path,true);
+		
+    	ObjectOutputStream writer = new ObjectOutputStream(file);
+    	writer.writeObject(message);
+    	
+    	
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
     public void Subscription_Recorder(String record) //write the downloaded file into the local director
     {
         try
@@ -223,7 +255,8 @@ public class EventBusListener extends Thread {
         	File folder = new File(".");
             FileWriter writer = new FileWriter(folder+"/Subscribtion_Records.txt",true);//initiate writer
             /////////////////////////////////////////////////////////////////////////////
-            writer.write(record+"\n");                                //write
+            writer.write(record+"\n"); 
+            //write
             writer.close();                                           //close writer
         }
         catch(UnknownHostException unknownHost){                      //To Handle Unknown Host Exception
@@ -267,6 +300,7 @@ public class EventBusListener extends Thread {
             		messageList.add(m);
             	}
             	indexBus.put(topicNameStr, messageList);
+            	topicLog(messageMarker, "message");
             	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
             }else{
             	System.out.println("Invalid object passed . returning....");

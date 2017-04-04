@@ -18,3 +18,4 @@ localhost-60006-r
 localhost-60006-q
 localhost-60006-education
 localhost-60006-sports
+localhost-60006-sports
