@@ -3,23 +3,20 @@ package com.aos.pubsub.services.components;
 
 import java.io.BufferedReader;
 import java.io.EOFException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Date;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
 import com.aos.pubsub.services.model.TopicModel;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 
 //PeerServer
@@ -64,6 +61,8 @@ class Listener extends Thread{
             String recievedString;
             while(socket.isConnected())
             {
+            		long msgRecievingStartTime = new Date().getTime();
+            		int msgCount = 0 ;
 	            	while(socket.getInputStream().available() != -1)
 	            	{//store received message into message
 			            /////////////////////////////////////////////////////////////////////////////
@@ -79,12 +78,15 @@ class Listener extends Thread{
 			            if(messageMarker instanceof Message){
 			            	messageModel = (Message)messageMarker;
 			            	String topicNameStr = messageModel.getTopicName();
-			            	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
+			            	System.out.println("Received new message  "+messageModel.getData() + " from topic "+topicNameStr );
 			            }else{
 			            	System.out.println("Invalid object passed . returning....");
 			            }
+			            msgCount++;
 			            
 	            	}
+	            	long msgRecievingEndTime = new Date().getTime();
+	            	System.out.println("Received "+msgCount+" messages  in "+ (msgRecievingEndTime -msgRecievingStartTime) +" milliseconds" );
 	            	
             }
         

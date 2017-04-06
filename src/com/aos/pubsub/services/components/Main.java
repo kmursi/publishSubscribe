@@ -18,10 +18,12 @@ public class Main extends Thread{
     }
     /*********************************************************************************************/
     public static void main(String[] args) throws InterruptedException {
-        String userInput,serverIP;                   //define user input variable
-        System.out.println("Enter the Indexing Server IP:");
-        Scanner uIn = new Scanner(System.in);
-        serverIP=uIn.nextLine().trim();
+        String userInput,serverIP,topicToPubSub;                   //define user input variable
+        //System.out.println("Enter the Indexing Server IP:");
+       // Scanner uIn = new Scanner(System.in);
+       // serverIP=uIn.nextLine().trim();
+        serverIP = args[0];
+        topicToPubSub = args[1];
         /////////////////////////////////////////////////////////////////////////////
         try {
             // Check if the server is up !
@@ -41,7 +43,7 @@ public class Main extends Thread{
         /////////////////////////////////////////////////////////////////////////////
         String peerID = "60006";             // the peer ID used as a port listener as well
         Thread thread;                      //define thread
-        System.out.println("\nWaiting for peers to download files..");
+        System.out.println("\nWaiting for messages..");
         System.out.println("=======================================================\n");
         /////////////////////////////////////////////////////////////////////////////
         try
@@ -70,11 +72,13 @@ public class Main extends Thread{
            
              if (userInput.equals("1"))                    //if user entered 2
             {
-                System.out.println("Enter the topic name");
-                String topicName = in.nextLine();                     // get file name that user want to register
+               // System.out.println("Enter the topic name");
+               // String topicName = in.nextLine();                     // get file name that user want to register
+            	 System.out.println("Registering the topic "+topicToPubSub);
                 MessageMarker mm = null;
                 TopicModel tModel = new TopicModel();
-                tModel.setTopicName(topicName);
+               // tModel.setTopicName(topicName);
+                tModel.setTopicName(topicToPubSub);
                 mm = tModel;
               //  tModel.setTopicName(topicName);
                 fh.publishTopic(mm);             //call register function and attach the file name
@@ -84,10 +88,10 @@ public class Main extends Thread{
             {
             	 System.out.println("Enter the topic name");
                  String topicName = in.nextLine();                     // get file name that user want to register
-                 System.out.println("Enter the message ");
-                 String messageStr = in.nextLine();  
+               //  System.out.println("Enter the message ");
+              //   String messageStr = in.nextLine();  
                  MessageMarker mm = null;
-                 Message message = new Message(0,messageStr,topicName);
+                 Message message = new Message(0,"",topicName);
                //  tModel.setTopicName(topicName);
                  fh.publishMessage(message);             //call register function and attach the file name
             }

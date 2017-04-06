@@ -1,15 +1,18 @@
 package com.aos.pubsub.services.eventBus;
 
-import java.net.Socket;
-import java.util.List;
-import com.aos.pubsub.services.model.Message;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Date;
+import java.util.List;
+
 import org.codehaus.jackson.map.ObjectMapper;
+
+import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
 
 
@@ -47,6 +50,7 @@ public class SubscriberHandler extends Thread {
 				topicName=splitter[0].trim();
 				lastMessage=Integer.parseInt(splitter[1].trim());
 				/////////////////////////////////////////////////////////////////////////
+				long msgRecievingStartTime = new Date().getTime();
 				while(socket.isConnected())
 				{
 					subscriberMessage = EventBusListener.indexBus.get(topicName);
@@ -67,6 +71,8 @@ public class SubscriberHandler extends Thread {
 						lastMessage = subscriberMessage.size();
 					}
 				}
+				long msgRecievingEndTime = new Date().getTime();
+				//System.out.println("Subscriber "+subIP+":"+port+" received messaeges in "+(msgRecievingEndTime - msgRecievingStartTime) +" milliseconds" );
 				System.out.println("Subscriber "+subIP+":"+port+" has been disconnected..!");
 			  }
 			}

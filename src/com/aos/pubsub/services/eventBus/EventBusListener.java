@@ -103,7 +103,8 @@ public class EventBusListener extends Thread {
                 	System.out.println("Topic " + topicName + "  created in the event bus \n");
                     /////////////////////////////////////////////////////////////////////////////
                     indexBus.put(topicName, messageList);             //store the hashmap element
-                    topicLog(messageMarker, "topic");
+                    if(topic.isDurable())							  // log only when topic is durable
+                    	topicLog(messageMarker, "topic");
                  
             }else{
             	System.out.println("Invalid object passed . returning....");

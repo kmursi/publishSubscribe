@@ -19,3 +19,9 @@ localhost-60006-q
 localhost-60006-education
 localhost-60006-sports
 localhost-60006-sports
+127.0.0.1-60006-test
+127.0.0.1-60006-test
+127.0.0.1-60006-test
+127.0.0.1-60006-test
+127.0.0.1-60006-test
+127.0.0.1-60006-test

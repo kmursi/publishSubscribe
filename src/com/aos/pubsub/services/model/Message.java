@@ -13,7 +13,15 @@ public class Message implements MessageMarker,Serializable {
 	int id;        //the seq number
     String data;      //holds message data or file name
     String topicName;
-    public Message(){
+    boolean isDurable; //added for fault tolerance
+    
+    public boolean isDurable() {
+		return isDurable;
+	}
+	public void setDurable(boolean isDurable) {
+		this.isDurable = isDurable;
+	}
+	public Message(){
     	
     }
     public Message(int id, String data, String topicName)
