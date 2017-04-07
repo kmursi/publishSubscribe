@@ -74,6 +74,7 @@ public class MessageHandler {
                 while (counter < 10000) {
                    Message m = new Message();
                    m.setTopicName(m1.getTopicName());
+                   m.setDurable(true);
                    m.setData(dt.toString()+"_"+ran.nextInt());
                    out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
                    out.flush();

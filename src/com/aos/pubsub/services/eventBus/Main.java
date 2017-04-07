@@ -18,8 +18,11 @@ public class Main extends Thread{
         this.port = port;
     }
     public static void main(String[] args) {
-
-        System.out.println("=======================================================\n");
+    	
+    	System.out.println("=======================================================\n");
+        System.out.println("Preparing Event Bus server..........\n");
+        EventBusListener.prepareEventBus(); // recover durable topics and message from disk
+       
         System.out.println("Event Bus is up and running..........\n");
         System.out.println("=======================================================\n");
         /////////////////////////////////////////////////////////////////////////////
@@ -49,7 +52,8 @@ public class Main extends Thread{
         }
     }
 
-    /*********************************************************************************************/
+		
+	/*********************************************************************************************/
 
     public synchronized void run(){
     	System.out.println("PORT "+port);

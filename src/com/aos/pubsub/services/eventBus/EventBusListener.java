@@ -2,6 +2,7 @@ package com.aos.pubsub.services.eventBus;
 
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -297,11 +298,13 @@ public class EventBusListener extends Thread {
             	String topicNameStr = messageModel.getTopicName();
             	messageList  = indexBus.get(topicNameStr);
             	Message m = new Message(messageList.size(), messageModel.getData(),topicNameStr );
+            	m.setDurable(true);
             	if(messageList != null){
             		messageList.add(m);
             	}
             	indexBus.put(topicNameStr, messageList);
-            	topicLog(messageMarker, "message");
+            	if(m.isDurable())  //only durable messaged gets persisted
+            		topicLog(m, "message");
             	System.out.println("Added new message  "+messageModel.getData() + " in topic "+topicNameStr );
             }else{
             	System.out.println("Invalid object passed . returning....");
@@ -337,6 +340,73 @@ public class EventBusListener extends Thread {
             Thread.currentThread().stop();
         }
     }
+
+	public static void prepareEventBus() {
+		String topicObjectPath="/Topic_Log.txt";
+		String messageObjectPath="/message_Log.txt";
+		String subscriptionObjectPath="/Subscribtion_Records.txt";
+    	FileInputStream fileTopic;
+    	FileInputStream fileMessage;
+    	FileInputStream fileSub;
+    	ObjectInputStream topicReader = null,messageReader = null , subscriptionReader = null;
+    	File folder = new File(".");
+		try {
+			
+			fileTopic = new FileInputStream(folder+topicObjectPath);			
+			topicReader = new ObjectInputStream(fileTopic);
+			Object objTopic,ObjMesg,subObj;
+			try{
+				while(( objTopic = topicReader.readObject())!=null){
+					TopicModel topicObject =(TopicModel) objTopic;
+					indexBus.put(topicObject.getTopicName(), new ArrayList<Message>());
+				}
+			}catch (IOException e) {
+				
+			}
+			
+			fileMessage = new FileInputStream(folder+messageObjectPath);			
+			messageReader = new ObjectInputStream(fileMessage);
+			try{
+				while(( ObjMesg = messageReader.readObject())!=null){
+					Message msgObject =(Message) ObjMesg;
+					List<Message> tpList = indexBus.get(msgObject.getTopicName());
+					tpList.add(msgObject);
+					indexBus.put(msgObject.getTopicName(),tpList);
+				}
+			}catch (IOException e) {
+				
+			}
+			
+			/*fileSub = new FileInputStream(folder+subscriptionObjectPath);			
+			subscriptionReader = new ObjectInputStream(fileSub);
+			try{
+				while(( subObj = subscriptionReader.readObject())!=null){
+					SubscribtionModel subObject =(SubscribtionModel) subObj;
+					Set<String> subList = topicSubscibtionList.get(subObject.getTopicName());
+					subList.add(subObject.getIP());
+					topicSubscibtionList.put(subObject.getTopicName(),subList);
+				}
+			}catch (IOException e) {
+				
+			}*/
+    	
+		} catch (FileNotFoundException e) {
+				System.out.println("Event Bus is about to be created..\n");
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}finally {
+			try {
+				messageReader.close();
+				topicReader.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+	}
     
     
 }
