@@ -9,13 +9,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
+import com.aos.pubsub.services.model.TopicModel;
 import com.opencsv.CSVReader;
 
 public class MessageHandler {
@@ -24,6 +29,7 @@ public class MessageHandler {
     String serverIP = "localhost";
     ObjectOutputStream out;
     Socket socket;
+    static volatile Map<String, List<Message>> localIndexBus = new ConcurrentHashMap<String, List<Message>>();
     /*********************************************************************************************/
 
     public MessageHandler (String peerID, String serverIP)
@@ -49,7 +55,25 @@ public class MessageHandler {
                 out.close();                                               //close writer
                 socket.close();                                            //close socket
                 System.out.println("\nYour topic has been registered on the eventBus ! \n");
+                ////////////////////////////////////////////////////////////////////
+                TopicModel topic = null;
+                List<Message> messageList;
+                String topicName; 
+                if(topicModel instanceof TopicModel){
+                	topic = (TopicModel) topicModel;
+                	long createdDate = new Date().getTime();
+                    topic.setCreatedOn(createdDate);
+                    topic.setUpdatedOn(createdDate);
+                    messageList = topic.getMessageList(); 
+                    topicName = topic.getTopicName();   
+                    if(messageList == null){
+                    	messageList = new ArrayList<Message>();
+                    	topic.setMessageList(messageList);
+                     } 
+                localIndexBus.put(topicName, messageList);
+                ////////////////////////////////////////////////////////////////////
             }
+    	}
             catch(UnknownHostException unknownHost){                       //To Handle Unknown Host Exception
                 System.err.println("host not available..!");
             }
@@ -61,17 +85,21 @@ public class MessageHandler {
     public void publishMessage(MessageMarker messageModel)                      //Register with index server Method
     {
         /////////////////////////////////////////////////////////////////////////////
-    	try {
-    		
+    	
+    		if(messageModel instanceof Message){
+    			Message m1 = (Message) messageModel;
+    			if(localIndexBus.containsKey(m1.getTopicName()))
+    			{
+    				try{
                 socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
                 System.out.println("\nConnected to the server..\n");
                 
-                Message m1 = (Message) messageModel;
+                
               //  while ((line = reader.readNext()) != null) {
                 Random ran = new Random();
                 Date dt = new Date();
                 int counter = 0;
-                while (counter < 10000) {
+                while (counter < 2) {
                    Message m = new Message();
                    m.setTopicName(m1.getTopicName());
                    m.setDurable(true);
@@ -81,6 +109,20 @@ public class MessageHandler {
                    out.writeObject(mapper.writeValueAsString(m));                                 //send the message
                    out.flush();
                    counter++;
+                   ////////////////////////////////////////////////////////////////////
+                   TopicModel topic = null;
+                   List<Message> messageList;
+                   String topicName; 
+                   
+                   	String topicNameStr = m.getTopicName();
+                   	messageList  = localIndexBus.get(topicNameStr);
+                   	
+                   	if(messageList != null){
+                   		messageList.add(m);
+                   	
+                   	localIndexBus.put(topicNameStr, messageList);
+                   	////////////////////////////////////////////////////////////////////
+                }
                 }
                System.out.println(counter);
                 /////////////////////////////////////////////////////////////////////////////
@@ -88,12 +130,20 @@ public class MessageHandler {
                 out.close();                                               //close writer
                 socket.close();                                            //close socket
             }
+    				
             catch(UnknownHostException unknownHost){                       //To Handle Unknown Host Exception
                 System.err.println("host not available..!");
             }
             catch(Exception e ){                                           //To Handle Input-Output Exception
                 e.printStackTrace();
             }
+    	}
+    			else{
+    				System.out.println("\nTopice ("+m1.getTopicName()+") is not existed in the EventBus !\n");
+    				System.out.println("\nPublishing request has been aborted !\n");
+    			}
+    	}
+    	
     }
 
 
