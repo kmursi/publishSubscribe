@@ -389,6 +389,13 @@ public class EventBusListener extends Thread {
 			}catch (IOException e) {
 				
 			}*/
+			System.out.println(" printing recreated index bus");
+			for(Map.Entry<String, List<Message>> entry : indexBus.entrySet()){
+				System.out.println("Topic name "+entry.getKey() +" conatains below message");
+				for(Message m : entry.getValue()){
+					System.out.println(m.getData());
+				}
+			}
     	
 		} catch (FileNotFoundException e) {
 				System.out.println("Event Bus is about to be created..\n");
@@ -397,8 +404,10 @@ public class EventBusListener extends Thread {
 			e.printStackTrace();
 		}finally {
 			try {
-				messageReader.close();
-				topicReader.close();
+				if(messageReader != null )
+					messageReader.close();
+				if(topicReader != null )
+					topicReader.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
