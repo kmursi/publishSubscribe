@@ -3,7 +3,16 @@ package com.aos.pubsub.services.components;
 //
 import java.io.IOException;
 import java.net.InetAddress;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.Scanner;
+
+import javax.swing.JSpinner;
+import javax.swing.SpinnerDateModel;
 
 import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
@@ -61,11 +70,11 @@ public class Main extends Thread{
             //Printing the available services
             System.out.println("*********************************************************************************************");
             System.out.println("Type the action number as following:");
-            System.out.println("1. Register a topic with eventbus.");
-            System.out.println("2. Register a message in topic");
-            System.out.println("3. Subscription request");
-            System.out.println("4. To exit.");
-            System.out.println("5. Pull request");
+            System.out.println("1. Register a topic on eventbus.");
+            System.out.println("2. Publish  messages in topic.");
+            System.out.println("3. Topic subscription request.");
+            System.out.println("4. Pull request from a specific date.");
+            System.out.println("5. To exit.");
             System.out.println("*********************************************************************************************\n");
             Scanner in = new Scanner(System.in);
             userInput = in.nextLine();                         //get the chosen service from the user
@@ -103,18 +112,28 @@ public class Main extends Thread{
                 String topicName = in.nextLine();  
                 fh.Subscribe_Request(topicName);
             }
-            else if (userInput.equals("4"))                    //if user entered 6
+            else if (userInput.equals("5"))                    //if user entered 6
             {
                 System.out.println("Exiting...");
                 System.exit(0);                         //exit the program
             }
-            else if (userInput.equals("5"))                    //if user entered 6
+            else if (userInput.equals("4"))                    //if user entered 6
             {
             	System.out.println("Enter the topic name");
                 String topicName = in.nextLine();  
-                System.out.println("Enter the last index");
-                String lastMessageIndex = in.nextLine();
-                fh.pullRequest(topicName, Integer.parseInt(lastMessageIndex)); //exit the program
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",Locale.US);
+					System.out.println("Enter date and time in the format (yyyy-MM-ddTHH:mm) For example: (2019-01-01T01:01)");
+					//System.out.println("For example, it is now " + format.format(new Date()));
+					java.util.Date date = null;
+					while (date == null) {
+					String line = in.nextLine();
+					try {
+					date = format.parse(line);
+					} catch (ParseException e) {
+					System.out.println("Sorry, that's not valid. Please try again.");
+					}
+					}
+                fh.pullRequest(topicName, date); //exit the program
             }
             else
             {

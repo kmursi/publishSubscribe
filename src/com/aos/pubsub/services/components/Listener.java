@@ -40,6 +40,7 @@ class Listener extends Thread{
         this.topicName= topicName;
         this.lastMessageIndex=lastMessageIndex;
     }
+    
     /*********************************************************************************************/
     public synchronized void run() {
     	MessageMarker messageMarker;

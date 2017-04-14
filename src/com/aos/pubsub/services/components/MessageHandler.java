@@ -1,6 +1,7 @@
 package com.aos.pubsub.services.components;
 
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -16,6 +17,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.aos.pubsub.services.model.Message;
@@ -104,6 +107,8 @@ public class MessageHandler {
                    m.setTopicName(m1.getTopicName());
                    m.setDurable(true);
                    m.setData(dt.toString()+"_"+ran.nextInt());
+                   long createdDate = new Date().getTime();
+                   m.setCreatedOn(createdDate);
                    out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
                    out.flush();
                    out.writeObject(mapper.writeValueAsString(m));                                 //send the message
@@ -198,6 +203,97 @@ public class MessageHandler {
     {
     	new Listener(serverIP,topicName, lastMessageIndex).start();
     }
+    
+    public void pullRequest(String topicName, Date date)
+    {
+    	MessageMarker messageMarker;
+    	Message messageModel = null;
+    	String message=topicName+"-"+date;
+    	long milliseconds = date.getTime();
+    	message = topicName +"-"+ milliseconds;
+    	long msgRecievingStartTime=0;
+    	ObjectInputStream in = null;
+    	int msgCount=0;
+    	String recievedString ="null";
+        try{
+            Socket socket = new Socket(serverIP, 60004);              //initiate socket withe the server through server searching port
+            System.out.println("\nConnected to the server..\n");
+            /////////////////////////////////////////////////////////////////////////////
+            out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
+            
+            out.flush();
+            //System.out.println("\nhi\n");
+            out.writeObject(message);                        //send
+            out.flush();
+            //System.out.println("\nhi\n");
+            /////////////////////////////////////////////////////////////////////////////
+            in = new ObjectInputStream(socket.getInputStream());//initiate reader
+            if(socket.isConnected())
+            {
+            		msgRecievingStartTime = new Date().getTime();
+            		msgCount = 0 ;
+	            	while(socket.getInputStream().available() != -1)
+	            	{//store received message into message
+			            /////////////////////////////////////////////////////////////////////////////
+			            	recievedString = in.readObject().toString();
+			            	
+			            try{
+			            	//recievedString = (String) in.readObject();               //read
+			            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
+			           }catch(JsonMappingException  | JsonParseException jEx){
+			        	   messageMarker =  mapper.readValue(recievedString, Message.class);
+			           }
+			            
+			            if(messageMarker instanceof Message){
+			            	messageModel = (Message)messageMarker;
+			            	String topicNameStr = messageModel.getTopicName();
+			            	System.out.println("Received new message  "+messageModel.getData() + " from topic "+topicNameStr );
+			            }else{
+			            	System.out.println("Invalid object passed . returning....");
+			            }
+			            msgCount++;
+			            
+	            	}
+	            	
+	            	
+            }
+        
+            /////////////////////////////////////////////////////////////////////////////
+            in.close();                                            //close reader
+            out.close();                                           //close writer
+            socket.close();                                        //close connection
+            System.out.println("\nConncetion has end with the eventBus!\n");
+            
+
+        }
+        catch (EOFException exc)
+    	{
+        	//System.out.println("Message received successfully ! ");
+    	}
+        catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
+            System.err.println("host not available..!");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally{
+        	try {
+			in.close();
+			                                           //close reader
+            out.close();                                           //close writer
+            
+            long msgRecievingEndTime = new Date().getTime();
+            if(recievedString.equals("null"))
+            	System.out.println("There are no published messages available after "+date.toString()+"...!\n");
+            else
+        	System.out.println("Received "+msgCount+" messages  in "+ (msgRecievingEndTime -msgRecievingStartTime) +" milliseconds" );
+        	} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+        }
+    }
+    
     
     
     /*********************************************************************************************/
