@@ -43,11 +43,16 @@ class Listener extends Thread{
     
     /*********************************************************************************************/
     public synchronized void run() {
+    	for(int i=0;i<10;i++)
+    	{
+    		System.out.println("\nAttempt number "+i+" to connect to the EventBus..!\n");
     	MessageMarker messageMarker;
     	Message messageModel = null;
     	String message=topicName+"-"+lastMessageIndex;
         try{
             Socket socket = new Socket(serverIP, 60003);              //initiate socket withe the server through server searching port
+            if(socket.isConnected())
+            {
             System.out.println("\nConnected to the server..\n");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
@@ -97,24 +102,35 @@ class Listener extends Thread{
             socket.close();                                        //close connection
             System.out.println("\nConncetion has lost with the eventBus!\n");
             
-            System.out.println("*********************************************************************************************");
-            System.out.println("Type the action number as following:");
-            System.out.println("1. Register a topic with eventbus.");
-            System.out.println("2. Register a message in topic");
-            System.out.println("3. Subscription request");
-            System.out.println("4. To exit.");
-            System.out.println("5. Pull request");
-            System.out.println("*********************************************************************************************\n");
+            }
         }
         catch (EOFException exc)
     	{
-        	System.out.println("Message received successfully ! ");
+        	System.out.println("Messages received successfully ! ");
     	}
         catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
             System.err.println("host not available..!");
+            
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            
         }
+        try {
+			sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
+    	System.out.println("*********************************************************************************************");
+        System.out.println("Type the action number as following:");
+        System.out.println("1. Register a topic on eventbus.");
+        System.out.println("2. Publish  messages in topic.");
+        System.out.println("3. Topic subscription request.");
+        System.out.println("4. Pull request from a specific date.");
+        System.out.println("5. To exit.");
+        System.out.println("*********************************************************************************************\n");
+    }
+    
 }
