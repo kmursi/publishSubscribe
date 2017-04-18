@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class MessageHandler {
             }
     }
     
-    public void publishMessage(MessageMarker messageModel)                      //Register with index server Method
+    public void publishMessage(MessageMarker messageModel, int duration, boolean duarapility)                      //Register with index server Method
     {
         /////////////////////////////////////////////////////////////////////////////
     	
@@ -105,10 +106,11 @@ public class MessageHandler {
                 while (counter < 2) {
                    Message m = new Message();
                    m.setTopicName(m1.getTopicName());
-                   m.setDurable(true);
+                   m.setDurable(duarapility);
                    m.setData(dt.toString()+"_"+ran.nextInt());
                    long createdDate = new Date().getTime();
                    m.setCreatedOn(createdDate);
+                   m.setExpirationDate(getExpirationDate(duration));
                    out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
                    out.flush();
                    out.writeObject(mapper.writeValueAsString(m));                                 //send the message
@@ -150,7 +152,17 @@ public class MessageHandler {
     	}
     	
     }
-
+    
+    
+    public long getExpirationDate(int numberOfDays)
+    {
+    	Date dt = new Date();
+    	Calendar c = Calendar.getInstance(); 
+    	c.setTime(dt); 
+    	c.add(Calendar.DATE, numberOfDays);
+    	dt = c.getTime();
+    	return dt.getTime();
+    }
 
     /*********************************************************************************************/
 

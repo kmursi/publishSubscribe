@@ -96,14 +96,52 @@ public class Main extends Thread{
             /////////////////////////////////////////////////////////////////////////////
             else if (userInput.equals("2"))                    //if user entered 3
             {
+            	int trails=0;
             	 System.out.println("Enter the topic name");
                  String topicName = in.nextLine();                     // get file name that user want to register
-               //  System.out.println("Enter the message ");
-              //   String messageStr = in.nextLine();  
+                 
+                 String isDurabe="";
+                 String line;
+                 while (isDurabe.equals("")) {
+                	 System.out.println("Is the message duarable? yes/no");
+ 						
+ 							line = in.nextLine();
+ 							if(line.trim().equals("yes"))
+ 							{
+ 								isDurabe="true";
+ 								break;
+ 							}
+ 							else if(line.trim().equals("no"))
+ 							{
+ 								isDurabe="false";
+ 								break;
+ 							}
+ 							else if(trails==3)
+ 							{
+ 								System.out.println("Exiting...");
+ 				                System.exit(0);  
+ 							}
+ 							trails++;
+ 							System.out.println("Sorry, that's not valid. Please try again.\n");
+ 						
+ 					}
+                 Integer duration=null;
+                 while (true) {
+                	 System.out.println("Enter number of days for the message to be expired:");
+  						try {
+  							duration = Integer.parseInt(in.nextLine());
+  							break;
+  						} catch (Exception e) {
+  							if(trails==3)
+  								break;
+  							trails++;
+  							System.out.println("Sorry, that's not valid. Please try again.\n");
+  						}
+  					}
                  MessageMarker mm = null;
                  Message message = new Message(0,"",topicName);
                //  tModel.setTopicName(topicName);
-                 fh.publishMessage(message);             //call register function and attach the file name
+                 fh.publishMessage(message,duration, Boolean.parseBoolean(isDurabe));             //call register function and attach the file name
             }
            
             else if (userInput.equals("3"))                    //if user entered 6
@@ -127,11 +165,11 @@ public class Main extends Thread{
 					java.util.Date date = null;
 					while (date == null) {
 					String line = in.nextLine();
-					try {
-					date = format.parse(line);
-					} catch (ParseException e) {
-					System.out.println("Sorry, that's not valid. Please try again.");
-					}
+						try {
+							date = format.parse(line);
+						} catch (ParseException e) {
+							System.out.println("Sorry, that's not valid. Please try again.");
+						}
 					}
                 fh.pullRequest(topicName, date); //exit the program
             }
