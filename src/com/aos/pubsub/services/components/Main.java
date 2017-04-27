@@ -31,6 +31,8 @@ public class Main extends Thread{
         System.out.println("Enter the Indexing Server IP:");
         Scanner uIn = new Scanner(System.in);
         serverIP=uIn.nextLine().trim();
+        System.out.println("Enter the Peer ID:");
+        String peerID=uIn.nextLine().trim();
       //  serverIP = args[0];
        // = args[1];
         /////////////////////////////////////////////////////////////////////////////
@@ -50,7 +52,7 @@ public class Main extends Thread{
             System.exit(0);
         }
         /////////////////////////////////////////////////////////////////////////////
-        String peerID = "60006";             // the peer ID used as a port listener as well
+        //String peerID = "60006";             // the peer ID used as a port listener as well
         Thread thread;                      //define thread
         System.out.println("\nWaiting for messages..");
         System.out.println("=======================================================\n");
