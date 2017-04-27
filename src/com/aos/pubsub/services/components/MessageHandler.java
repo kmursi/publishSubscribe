@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.jackson.JsonParseException;
@@ -89,7 +90,9 @@ public class MessageHandler {
     public void publishMessage(MessageMarker messageModel, int duration, boolean duarapility)                      //Register with index server Method
     {
         /////////////////////////////////////////////////////////////////////////////
-    	
+    	Scanner in = new Scanner(System.in);
+    		System.out.println("Enter the number of messages:");
+    		int number = in.nextInt();
     		if(messageModel instanceof Message){
     			Message m1 = (Message) messageModel;
     			if(localIndexBus.containsKey(m1.getTopicName()))
@@ -103,7 +106,9 @@ public class MessageHandler {
                 Random ran = new Random();
                 Date dt = new Date();
                 int counter = 0;
-                while (counter < 2) {
+                long startTime = System.currentTimeMillis();
+                long avgTime=0;
+                while (counter < number) {
                    Message m = new Message();
                    m.setTopicName(m1.getTopicName());
                    m.setDurable(duarapility);
@@ -126,12 +131,13 @@ public class MessageHandler {
                    	
                    	if(messageList != null){
                    		messageList.add(m);
-                   	
+                   	avgTime+=(System.currentTimeMillis()-startTime);
                    	localIndexBus.put(topicNameStr, messageList);
                    	////////////////////////////////////////////////////////////////////
                 }
                 }
-               System.out.println(counter);
+                System.out.println("Avrage time to publish "+number+" messages is "+avgTime/number+" msec");
+                //System.out.println(counter);
                 /////////////////////////////////////////////////////////////////////////////
               //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
                 out.close();                                               //close writer
