@@ -32,9 +32,7 @@ public class Main extends Thread{
         Scanner uIn = new Scanner(System.in);
         serverIP=uIn.nextLine().trim();
         System.out.println("Enter the Peer ID:");
-        String peerID=uIn.nextLine().trim();
-      //  serverIP = args[0];
-       // = args[1];
+        String peerID=uIn.nextLine().trim();     					// the peer ID used as a port listener as well
         /////////////////////////////////////////////////////////////////////////////
         try {
             // Check if the server is up !
@@ -52,16 +50,12 @@ public class Main extends Thread{
             System.exit(0);
         }
         /////////////////////////////////////////////////////////////////////////////
-        //String peerID = "60006";             // the peer ID used as a port listener as well
-        Thread thread;                      //define thread
-        System.out.println("\nWaiting for messages..");
-        System.out.println("=======================================================\n");
-        /////////////////////////////////////////////////////////////////////////////
+        Thread thread;                      						//define thread
         try
         {
             thread = new Thread (new Main(Integer.parseInt(peerID))); //initiate listener thread
-            thread.start();                             //start listener
-        } catch(Exception e){                           //track general errors
+            thread.start();                             			 //start listener
+        } catch(Exception e){                           			//track general errors
             e.printStackTrace();
         }
         /////////////////////////////////////////////////////////////////////////////
@@ -70,64 +64,62 @@ public class Main extends Thread{
         while (true)
         {
             //Printing the available services
-            System.out.println("*********************************************************************************************");
+        	System.out.println("=======================================================");
             System.out.println("Type the action number as following:");
             System.out.println("1. Register a topic on eventbus.");
-            System.out.println("2. Publish  messages in topic.");
-            System.out.println("3. Topic subscription request.");
-            System.out.println("4. Pull request from a specific date.");
+            System.out.println("2. Publish  messages in a topic.");
+            System.out.println("3. Subscribe a topic.");
+            System.out.println("4. Messages pull request from a specific date.");
             System.out.println("5. To exit.");
-            System.out.println("*********************************************************************************************\n");
+            System.out.println("=======================================================\n");
             Scanner in = new Scanner(System.in);
-            userInput = in.nextLine();                         //get the chosen service from the user
+            userInput = in.nextLine();                         			//get the chosen service from the user
            
-             if (userInput.equals("1"))                    //if user entered 2
+             if (userInput.equals("1"))                    				//if user entered 2
             {
-                System.out.println("Enter the topic name");
+                System.out.println("Enter the topic name:");
                 String topicName = in.nextLine();                     // get file name that user want to register
-            	 System.out.println("Registering the topic "+topicName);
+            	 System.out.println("Registering the topic "+topicName+"...");
                 MessageMarker mm = null;
                 TopicModel tModel = new TopicModel();
                 tModel.setTopicName(topicName);
-               // tModel.setTopicName(topicToPubSub);
                 mm = tModel;
-              //  tModel.setTopicName(topicName);
                 tModel.setDurable(true);
-                fh.publishTopic(mm);             //call register function and attach the file name
+                fh.publishTopic(mm);             					//call register function and attach the file name
             }
             /////////////////////////////////////////////////////////////////////////////
-            else if (userInput.equals("2"))                    //if user entered 3
+            else if (userInput.equals("2"))                    		//if user entered 3
             {
             	int trails=0;
-            	 System.out.println("Enter the topic name");
+            	 System.out.println("Enter the topic name:");
                  String topicName = in.nextLine();                     // get file name that user want to register
                  
                  String isDurabe="";
                  String line;
-                 while (isDurabe.equals("")) {
+                 while (isDurabe.equals("")) {							//wait for input to be filled
                 	 System.out.println("Is the message duarable? yes/no");
  						
  							line = in.nextLine();
- 							if(line.trim().equals("yes"))
+ 							if(line.trim().equals("yes"))				//input = yes
  							{
- 								isDurabe="true";
+ 								isDurabe="true";						//message is durable
  								break;
  							}
- 							else if(line.trim().equals("no"))
+ 							else if(line.trim().equals("no"))			//input = no
  							{
- 								isDurabe="false";
+ 								isDurabe="false";						//message is not durable
  								break;
  							}
- 							else if(trails==3)
+ 							else if(trails==3)							//user can try for three times only
  							{
  								System.out.println("Exiting...");
  				                System.exit(0);  
  							}
  							trails++;
- 							System.out.println("Sorry, that's not valid. Please try again.\n");
+ 							System.out.println("Sorry, invalid input! Please try again.");
  						
  					}
-                 Integer duration=null;
+                 Integer duration=null;									//time for a message to be expired
                  while (true) {
                 	 System.out.println("Enter number of days for the message to be expired:");
   						try {
@@ -137,31 +129,29 @@ public class Main extends Thread{
   							if(trails==3)
   								break;
   							trails++;
-  							System.out.println("Sorry, that's not valid. Please try again.\n");
+  							System.out.println("Sorry, invalid input! Please try again.");
   						}
   					}
-                 MessageMarker mm = null;
-                 Message message = new Message(0,"",topicName);
-               //  tModel.setTopicName(topicName);
-                 fh.publishMessage(message,duration, Boolean.parseBoolean(isDurabe));             //call register function and attach the file name
+                 Message message = new Message(0,"",topicName);			//initiate a new message
+                 fh.publishMessage(message,duration, Boolean.parseBoolean(isDurabe));//call register function and attach the file name
             }
            
-            else if (userInput.equals("3"))                    //if user entered 6
+            else if (userInput.equals("3"))                    //if user entered 3
             {
-            	System.out.println("Enter the topic name");
+            	System.out.println("Enter the topic name:");
                 String topicName = in.nextLine();  
                 fh.Subscribe_Request(topicName);
             }
-            else if (userInput.equals("5"))                    //if user entered 6
+            else if (userInput.equals("5"))                    //if user entered 5
             {
                 System.out.println("Exiting...");
-                System.exit(0);                         //exit the program
+                System.exit(0);                         		//exit the program
             }
-            else if (userInput.equals("4"))                    //if user entered 6
+            else if (userInput.equals("4"))                    //if user entered 4
             {
             	System.out.println("Enter the topic name");
                 String topicName = in.nextLine();  
-                DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",Locale.US);
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",Locale.US); //the nedded time format
 					System.out.println("Enter date and time in the format (yyyy-MM-ddTHH:mm) For example: (2019-01-01T01:01)");
 					//System.out.println("For example, it is now " + format.format(new Date()));
 					java.util.Date date = null;
@@ -170,15 +160,15 @@ public class Main extends Thread{
 						try {
 							date = format.parse(line);
 						} catch (ParseException e) {
-							System.out.println("Sorry, that's not valid. Please try again.");
+							System.out.println("Sorry, invalid input! Please try again.");
 						}
 					}
-                fh.pullRequest(topicName, date); //exit the program
+                fh.pullRequest(topicName, date); 					//exit the program
             }
             else
             {
                 // awareness for the user of the correct options
-                System.out.println("Wrong input! the input should be 1, 2, 3, or 4 ..\n");
+                System.out.println("Wrong input! the input should be 1, 2, 3, or 4 ..");
             }
         }
     }

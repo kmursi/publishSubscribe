@@ -1,6 +1,5 @@
 package com.aos.pubsub.services.components;
 
-
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.ObjectInputStream;
@@ -18,8 +17,6 @@ import com.aos.pubsub.services.model.Message;
 import com.aos.pubsub.services.model.MessageMarker;
 import com.aos.pubsub.services.model.TopicModel;
 
-
-//PeerServer
 class Listener extends Thread{
     int port;
     String message;
@@ -42,10 +39,12 @@ class Listener extends Thread{
     }
     
     /*********************************************************************************************/
+    
     public synchronized void run() {
     	for(int i=0;i<10;i++)
     	{
-    		System.out.println("\nAttempt number "+i+" to connect to the EventBus..!\n");
+    	//System.out.println("=======================================================");
+    	System.out.println("Attempt number "+i+" to connect to the EventBus..!");
     	MessageMarker messageMarker;
     	Message messageModel = null;
     	String message=topicName+"-"+lastMessageIndex;
@@ -53,15 +52,11 @@ class Listener extends Thread{
             Socket socket = new Socket(serverIP, 60003);              //initiate socket withe the server through server searching port
             if(socket.isConnected())
             {
-            System.out.println("\nConnected to the server..\n");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
-            
             out.flush();
-            //System.out.println("\nhi\n");
             out.writeObject(message);                        //send
             out.flush();
-            //System.out.println("\nhi\n");
             /////////////////////////////////////////////////////////////////////////////
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
             String recievedString;
@@ -70,12 +65,10 @@ class Listener extends Thread{
             		long msgRecievingStartTime = new Date().getTime();
             		int msgCount = 0 ;
 	            	while(socket.getInputStream().available() != -1)
-	            	{//store received message into message
+	            	{
 			            /////////////////////////////////////////////////////////////////////////////
 			            	recievedString = in.readObject().toString();
-			            	
 			            try{
-			            	//recievedString = (String) in.readObject();               //read
 			            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
 			           }catch(JsonMappingException  | JsonParseException jEx){
 			        	   messageMarker =  mapper.readValue(recievedString, Message.class);
@@ -89,13 +82,10 @@ class Listener extends Thread{
 			            	System.out.println("Invalid object passed . returning....");
 			            }
 			            msgCount++;
-			            
 	            	}
 	            	long msgRecievingEndTime = new Date().getTime();
-	            	System.out.println("Received "+msgCount+" messages  in "+ (msgRecievingEndTime -msgRecievingStartTime) +" milliseconds" );
-	            	
+	            	System.out.println("Received "+msgCount+" messages  in "+ (msgRecievingEndTime -msgRecievingStartTime) +" milliseconds." );          	
             }
-        
             /////////////////////////////////////////////////////////////////////////////
             in.close();                                            //close reader
             out.close();                                           //close writer
@@ -114,7 +104,6 @@ class Listener extends Thread{
         }
         catch (Exception e) {
             //e.printStackTrace();
-            
         }
         try {
 			sleep(50000);
@@ -123,14 +112,14 @@ class Listener extends Thread{
 			e.printStackTrace();
 		}
     }
-    	System.out.println("*********************************************************************************************");
+    	System.out.println("=======================================================\n");
+        System.out.println("=======================================================");
         System.out.println("Type the action number as following:");
         System.out.println("1. Register a topic on eventbus.");
-        System.out.println("2. Publish  messages in topic.");
-        System.out.println("3. Topic subscription request.");
-        System.out.println("4. Pull request from a specific date.");
+        System.out.println("2. Publish  messages in a topic.");
+        System.out.println("3. Subscribe a topic.");
+        System.out.println("4. Messages pull request from a specific date.");
         System.out.println("5. To exit.");
-        System.out.println("*********************************************************************************************\n");
+        System.out.println("=======================================================\n");
     }
-    
 }

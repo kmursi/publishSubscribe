@@ -49,33 +49,34 @@ public class MessageHandler {
     {
         /////////////////////////////////////////////////////////////////////////////
     	try {
-                socket = new Socket(serverIP, 60000);                //connect to the registration socket on the server
-                System.out.println("\nConnected to the server..\n");
-                out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
+    		System.out.println("=======================================================");
+                socket = new Socket(serverIP, 60000);                		//connect to the registration socket on the server
+                System.out.println("Connected to the server "+serverIP+" to register a new topic.");
+                out = new ObjectOutputStream(socket.getOutputStream());     //initiate writer
                 out.flush();
-                out.writeObject(mapper.writeValueAsString(topicModel));                                 //send the message
+                out.writeObject(mapper.writeValueAsString(topicModel));      //send the message
                 out.flush();
                 /////////////////////////////////////////////////////////////////////////////
-              //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
                 out.close();                                               //close writer
                 socket.close();                                            //close socket
-                System.out.println("\nYour topic has been registered on the eventBus ! \n");
+                System.out.println("Your topic has been registered on the eventBus !");
                 ////////////////////////////////////////////////////////////////////
                 TopicModel topic = null;
                 List<Message> messageList;
                 String topicName; 
-                if(topicModel instanceof TopicModel){
-                	topic = (TopicModel) topicModel;
-                	long createdDate = new Date().getTime();
+                if(topicModel instanceof TopicModel){						//double check the model type
+                	topic = (TopicModel) topicModel;						//cast the model to topic
+                	long createdDate = new Date().getTime();				//set issuing time
                     topic.setCreatedOn(createdDate);
                     topic.setUpdatedOn(createdDate);
                     messageList = topic.getMessageList(); 
-                    topicName = topic.getTopicName();   
+                    topicName = topic.getTopicName();   					//set topic name
                     if(messageList == null){
                     	messageList = new ArrayList<Message>();
                     	topic.setMessageList(messageList);
                      } 
-                localIndexBus.put(topicName, messageList);
+                localIndexBus.put(topicName, messageList);					//add the message to the local indexbus
+                System.out.println("=======================================================\n");
                 ////////////////////////////////////////////////////////////////////
             }
     	}
@@ -93,16 +94,14 @@ public class MessageHandler {
     	Scanner in = new Scanner(System.in);
     		System.out.println("Enter the number of messages:");
     		int number = in.nextInt();
+    		System.out.println("=======================================================");
     		if(messageModel instanceof Message){
     			Message m1 = (Message) messageModel;
     			if(localIndexBus.containsKey(m1.getTopicName()))
     			{
     				try{
                 socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
-                System.out.println("\nConnected to the server..\n");
-                
-                
-              //  while ((line = reader.readNext()) != null) {
+                System.out.println("Connected to the server "+serverIP+" to publish new messages.");
                 Random ran = new Random();
                 Date dt = new Date();
                 int counter = 0;
@@ -116,7 +115,7 @@ public class MessageHandler {
                    long createdDate = new Date().getTime();
                    m.setCreatedOn(createdDate);
                    m.setExpirationDate(getExpirationDate(duration));
-                   out = new ObjectOutputStream(socket.getOutputStream());   //initiate writer
+                   out = new ObjectOutputStream(socket.getOutputStream());   			//initiate writer
                    out.flush();
                    out.writeObject(mapper.writeValueAsString(m));                                 //send the message
                    out.flush();
@@ -134,9 +133,10 @@ public class MessageHandler {
                    	avgTime+=(System.currentTimeMillis()-startTime);
                    	localIndexBus.put(topicNameStr, messageList);
                    	////////////////////////////////////////////////////////////////////
+                   	}
                 }
-                }
-                System.out.println("Avrage time to publish "+number+" messages is "+avgTime/number+" msec");
+                System.out.println("Messages have been successfully published to the event bus.");
+                System.out.println("Avrage time to publish "+number+" messages is "+avgTime/number+" msec.");
                 //System.out.println(counter);
                 /////////////////////////////////////////////////////////////////////////////
               //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
@@ -152,13 +152,15 @@ public class MessageHandler {
             }
     	}
     			else{
-    				System.out.println("\nTopice ("+m1.getTopicName()+") is not existed in the EventBus !\n");
-    				System.out.println("\nPublishing request has been aborted !\n");
+    				System.out.println("Topice ("+m1.getTopicName()+") is not existed in the EventBus !");
+    				System.out.println("Publishing request has been aborted !");
     			}
+    			System.out.println("=======================================================\n");
     	}
     	
     }
     
+    /*********************************************************************************************/
     
     public long getExpirationDate(int numberOfDays)
     {
@@ -175,26 +177,25 @@ public class MessageHandler {
 
     public void Subscribe_Request(String topicName)                  //search file on the server
     {
+    	System.out.println("=======================================================");
         String message;
         ObjectInputStream in;
         try{
             socket = new Socket(serverIP, 60002);              //initiate socket withe the server through server searching port
-            System.out.println("\nConnected to the server..\n");
+            System.out.println("Connected to the server "+serverIP+" to subscribe topic "+topicName+".");
             /////////////////////////////////////////////////////////////////////////////
-            
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
             out.flush();
             message = peerID+"-"+topicName;
             out.writeObject(message);                        //send
             out.flush();
-            
 		            in = new ObjectInputStream(socket.getInputStream());//initiate reader
 		            message = in.readObject().toString();                  //store received message into message
 		            /////////////////////////////////////////////////////////////////////////////
 		            if  (message.trim().equals("Topic not found")) 
 		            {        //check the file index existence in the server based on the server message
 		
-		                System.out.println("Topic not found !\n");
+		                System.out.println("Topic not found !");
 		            }
 		            else 
 		            {
@@ -204,10 +205,6 @@ public class MessageHandler {
 		            }
             	
             /////////////////////////////////////////////////////////////////////////////
-            
-            //in.close();                                            //close reader
-            //out.close();                                           //close writer
-            //socket.close();                                        //close connection
         }
         catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
             System.err.println("host not available..!");
@@ -215,6 +212,7 @@ public class MessageHandler {
         catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("=======================================================\n");
     }
     
     public void pullRequest(String topicName, int lastMessageIndex)
@@ -224,6 +222,7 @@ public class MessageHandler {
     
     public void pullRequest(String topicName, Date date)
     {
+    	System.out.println("=======================================================");
     	MessageMarker messageMarker;
     	Message messageModel = null;
     	String message=topicName+"-"+date;
@@ -235,15 +234,12 @@ public class MessageHandler {
     	String recievedString ="null";
         try{
             Socket socket = new Socket(serverIP, 60004);              //initiate socket withe the server through server searching port
-            System.out.println("\nConnected to the server..\n");
+            System.out.println("Connected to the server "+serverIP+" to pull messages from topic "+topicName+".");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
-            
             out.flush();
-            //System.out.println("\nhi\n");
             out.writeObject(message);                        //send
             out.flush();
-            //System.out.println("\nhi\n");
             /////////////////////////////////////////////////////////////////////////////
             in = new ObjectInputStream(socket.getInputStream());//initiate reader
             if(socket.isConnected())
@@ -254,14 +250,12 @@ public class MessageHandler {
 	            	{//store received message into message
 			            /////////////////////////////////////////////////////////////////////////////
 			            	recievedString = in.readObject().toString();
-			            	
 			            try{
 			            	//recievedString = (String) in.readObject();               //read
 			            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
 			           }catch(JsonMappingException  | JsonParseException jEx){
 			        	   messageMarker =  mapper.readValue(recievedString, Message.class);
 			           }
-			            
 			            if(messageMarker instanceof Message){
 			            	messageModel = (Message)messageMarker;
 			            	String topicNameStr = messageModel.getTopicName();
@@ -271,22 +265,17 @@ public class MessageHandler {
 			            }
 			            msgCount++;
 			            
-	            	}
-	            	
-	            	
-            }
-        
+	            	} 	
+            }       
             /////////////////////////////////////////////////////////////////////////////
             in.close();                                            //close reader
             out.close();                                           //close writer
             socket.close();                                        //close connection
-            System.out.println("\nConncetion has end with the eventBus!\n");
-            
-
+            System.out.println("\nConncetion has end with the eventBus!");
         }
         catch (EOFException exc)
     	{
-        	//System.out.println("Message received successfully ! ");
+        	
     	}
         catch(UnknownHostException unknownHost){                   //To Handle Unknown Host Exception
             System.err.println("host not available..!");
@@ -296,47 +285,26 @@ public class MessageHandler {
         }
         finally{
         	try {
-			in.close();
-			                                           //close reader
+			in.close();                                           //close reader
             out.close();                                           //close writer
-            
             long msgRecievingEndTime = new Date().getTime();
             if(recievedString.equals("null"))
-            	System.out.println("There are no published messages available after "+date.toString()+"...!\n");
+            	System.out.println("There are no published messages available after "+date.toString()+"...!");
             else
         	System.out.println("Received "+msgCount+" messages  in "+ (msgRecievingEndTime -msgRecievingStartTime) +" milliseconds" );
         	} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} 
-        }
-    }
-    
-    
-    
-    /*********************************************************************************************/
-
-    public void Create_Local_File(String fileName,String fileContent) //write the downloaded file into the local director
-    {
-        try
-        {
-            final File f = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath()); //get the jar directory
-            File parentFolder = new File(f.getParent());                                     //get the parent folder of the jar
-            File folder = new File(parentFolder.getParent()+"/peer1/src/main/resources"); //get the resources folder path
-
-            FileWriter writer = new FileWriter(folder+"/"+fileName.trim(),true);//initiate writer
-            /////////////////////////////////////////////////////////////////////////////
-            writer.write(fileContent+"\n");                                //write
-            writer.close();                                           //close writer
-        }
-        catch(UnknownHostException unknownHost){                      //To Handle Unknown Host Exception
-            System.err.println("host not available..!");
-        }
-        catch(IOException ioException){                               //To Handle Input-Output Exception
-            ioException.printStackTrace();
-        }
-        catch(Exception e){
-            e.printStackTrace();
+			}
+        	System.out.println("=======================================================\n");
+            System.out.println("=======================================================");
+            System.out.println("Type the action number as following:");
+            System.out.println("1. Register a topic on eventbus.");
+            System.out.println("2. Publish  messages in a topic.");
+            System.out.println("3. Subscribe a topic.");
+            System.out.println("4. Messages pull request from a specific date.");
+            System.out.println("5. To exit.");
+            System.out.println("=======================================================\n");
         }
     }
 
