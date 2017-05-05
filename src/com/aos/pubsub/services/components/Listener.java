@@ -28,53 +28,52 @@ class Listener extends Thread{
     int lastMessageIndex;
     ObjectOutputStream out;
     /*********************************************************************************************/
-    public Listener(int port) {
-        this.port = port;
+    public Listener(int port) {						//listener constructor with port parameter
+        this.port = port; 
         System.out.println("Listening...");
     }
-    public Listener(String serverIP,String topicName , int lastMessageIndex) {
-        this.serverIP=serverIP;
-        this.topicName= topicName;
-        this.lastMessageIndex=lastMessageIndex;
+    public Listener(String serverIP,String topicName , int lastMessageIndex) { //listener constructor with port, IP, topic, and message index parameters
+        this.serverIP=serverIP;						//store IP to local variable
+        this.topicName= topicName;					//store topic name to local variable
+        this.lastMessageIndex=lastMessageIndex;		//store message index to local variable
     }
     
     /*********************************************************************************************/
     
     public synchronized void run() {
-    	for(int i=0;i<10;i++)
+    	for(int i=0;i<10;i++)									//this loop used to try connecting to the even bus when it shutdown
     	{
-    	//System.out.println("=======================================================");
     	System.out.println("Attempt number "+i+" to connect to the EventBus..!");
-    	MessageMarker messageMarker;
+    	MessageMarker messageMarker;							//message model
     	Message messageModel = null;
-    	String message=topicName+"-"+lastMessageIndex;
+    	String message=topicName+"-"+lastMessageIndex;			//sending format to the eventbus
         try{
-            Socket socket = new Socket(serverIP, 60003);              //initiate socket withe the server through server searching port
+            Socket socket = new Socket(serverIP, 60003);        //initiate socket with the server through server searching port
             if(socket.isConnected())
             {
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
             out.flush();
-            out.writeObject(message);                        //send
+            out.writeObject(message);                        		//send
             out.flush();
             /////////////////////////////////////////////////////////////////////////////
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());//initiate reader
             String recievedString;
-            while(socket.isConnected())
+            while(socket.isConnected())          				//connection is up?
             {
-            		long msgRecievingStartTime = new Date().getTime();
+            		long msgRecievingStartTime = new Date().getTime();	//get current time
             		int msgCount = 0 ;
-	            	while(socket.getInputStream().available() != -1)
+	            	while(socket.getInputStream().available() != -1)	//available received object
 	            	{
 			            /////////////////////////////////////////////////////////////////////////////
-			            	recievedString = in.readObject().toString();
+			            	recievedString = in.readObject().toString(); //read object
 			            try{
 			            	messageMarker = mapper.readValue(recievedString, TopicModel.class);
 			           }catch(JsonMappingException  | JsonParseException jEx){
 			        	   messageMarker =  mapper.readValue(recievedString, Message.class);
 			           }
 			            
-			            if(messageMarker instanceof Message){
+			            if(messageMarker instanceof Message){ 			//verify the object type
 			            	messageModel = (Message)messageMarker;
 			            	String topicNameStr = messageModel.getTopicName();
 			            	System.out.println("Received new message  "+messageModel.getData() + " from topic "+topicNameStr );

@@ -21,28 +21,28 @@ import com.aos.pubsub.services.model.TopicModel;
 /*********************************************************************************************/
 public class Main extends Thread{
     static int port;
-    Main(int port)
+    Main(int port)							// Main constructor receiving port number
     {
-        this.port = port;
+        this.port = port;					//store port to local variable
     }
     /*********************************************************************************************/
     public static void main(String[] args) throws InterruptedException {
-        String userInput,serverIP,topicToPubSub;                   //define user input variable
+        String userInput,serverIP,topicToPubSub;               //define user input variable
         System.out.println("Enter the Indexing Server IP:");
         Scanner uIn = new Scanner(System.in);
         serverIP=uIn.nextLine().trim();
         System.out.println("Enter the Peer ID:");
-        String peerID=uIn.nextLine().trim();     					// the peer ID used as a port listener as well
+        String peerID=uIn.nextLine().trim();     			// the peer ID used as a port listener as well
         /////////////////////////////////////////////////////////////////////////////
         try {
-            // Check if the server is up !
+            												// Check if the server is up !
             if(InetAddress.getByName(serverIP).isReachable(5000))
                 System.out.println("Server is up..!");
             else
             {
                 System.out.println("Server not found..!");
                 System.out.println("Exiting..");
-                System.exit(0);
+                System.exit(0);								//exit the application
             }
         } catch (IOException ex) {
             System.out.println("Server not found..!");

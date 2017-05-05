@@ -39,8 +39,8 @@ public class MessageHandler {
 
     public MessageHandler (String peerID, String serverIP)
     {
-        this.serverIP=serverIP;
-        this.peerID=peerID;             //store peer ID into peerID
+        this.serverIP=serverIP;											//store IP into serverIP
+        this.peerID=peerID;             								//store peer ID into peerID
     }
 
     /*********************************************************************************************/
@@ -102,33 +102,30 @@ public class MessageHandler {
     				try{
                 socket = new Socket(serverIP, 60001);                //connect to the registration socket on the server
                 System.out.println("Connected to the server "+serverIP+" to publish new messages.");
-                Random ran = new Random();
-                Date dt = new Date();
+                Random ran = new Random();							//create random number
+                Date dt = new Date();								//get current date
                 int counter = 0;
-                long startTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();		//current time in msec 
                 long avgTime=0;
                 while (counter < number) {
-                   Message m = new Message();
+                   Message m = new Message();						//create new message object
                    m.setTopicName(m1.getTopicName());
-                   m.setDurable(duarapility);
-                   m.setData(dt.toString()+"_"+ran.nextInt());
+                   m.setDurable(duarapility);						//set durability
+                   m.setData(dt.toString()+"_"+ran.nextInt());		//set data
                    long createdDate = new Date().getTime();
-                   m.setCreatedOn(createdDate);
+                   m.setCreatedOn(createdDate);						//set dateTime
                    m.setExpirationDate(getExpirationDate(duration));
-                   out = new ObjectOutputStream(socket.getOutputStream());   			//initiate writer
+                   out = new ObjectOutputStream(socket.getOutputStream());  //initiate writer
                    out.flush();
-                   out.writeObject(mapper.writeValueAsString(m));                                 //send the message
+                   out.writeObject(mapper.writeValueAsString(m));           //send the message
                    out.flush();
                    counter++;
                    ////////////////////////////////////////////////////////////////////
-                   TopicModel topic = null;
                    List<Message> messageList;
-                   String topicName; 
-                   
-                   	String topicNameStr = m.getTopicName();
+                   	String topicNameStr = m.getTopicName();					//store topic name
                    	messageList  = localIndexBus.get(topicNameStr);
                    	
-                   	if(messageList != null){
+                   	if(messageList != null){								//check the list availability
                    		messageList.add(m);
                    	avgTime+=(System.currentTimeMillis()-startTime);
                    	localIndexBus.put(topicNameStr, messageList);
@@ -137,9 +134,7 @@ public class MessageHandler {
                 }
                 System.out.println("Messages have been successfully published to the event bus.");
                 System.out.println("Avrage time to publish "+number+" messages is "+avgTime/number+" msec.");
-                //System.out.println(counter);
                 /////////////////////////////////////////////////////////////////////////////
-              //  System.out.println("Topic '"+topicModel.getTopicName()+"'  has been published successfully on the server!!\n");
                 out.close();                                               //close writer
                 socket.close();                                            //close socket
             }
@@ -164,12 +159,12 @@ public class MessageHandler {
     
     public long getExpirationDate(int numberOfDays)
     {
-    	Date dt = new Date();
-    	Calendar c = Calendar.getInstance(); 
-    	c.setTime(dt); 
-    	c.add(Calendar.DATE, numberOfDays);
-    	dt = c.getTime();
-    	return dt.getTime();
+    	Date dt = new Date();								//get current time	
+    	Calendar c = Calendar.getInstance(); 				//create calendar object
+    	c.setTime(dt); 										//set calendar to date
+    	c.add(Calendar.DATE, numberOfDays);					//add number of days
+    	dt = c.getTime();							
+    	return dt.getTime();								//return the expiration dateTime in long format
     }
 
     /*********************************************************************************************/
@@ -181,20 +176,19 @@ public class MessageHandler {
         String message;
         ObjectInputStream in;
         try{
-            socket = new Socket(serverIP, 60002);              //initiate socket withe the server through server searching port
+            socket = new Socket(serverIP, 60002);              		//initiate socket with the server through server searching port
             System.out.println("Connected to the server "+serverIP+" to subscribe topic "+topicName+".");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
             out.flush();
             message = peerID+"-"+topicName;
-            out.writeObject(message);                        //send
+            out.writeObject(message);                        		//send
             out.flush();
 		            in = new ObjectInputStream(socket.getInputStream());//initiate reader
-		            message = in.readObject().toString();                  //store received message into message
+		            message = in.readObject().toString();               //store received message into message
 		            /////////////////////////////////////////////////////////////////////////////
-		            if  (message.trim().equals("Topic not found")) 
-		            {        //check the file index existence in the server based on the server message
-		
+		            if  (message.trim().equals("Topic not found")) //check the file index existence in the server based on the server message
+		            {        
 		                System.out.println("Topic not found !");
 		            }
 		            else 
@@ -217,7 +211,7 @@ public class MessageHandler {
     
     public void pullRequest(String topicName, int lastMessageIndex)
     {
-    	new Listener(serverIP,topicName, lastMessageIndex).start();
+    	new Listener(serverIP,topicName, lastMessageIndex).start();	//start new thread of the listener object
     }
     
     public void pullRequest(String topicName, Date date)
@@ -233,7 +227,7 @@ public class MessageHandler {
     	int msgCount=0;
     	String recievedString ="null";
         try{
-            Socket socket = new Socket(serverIP, 60004);              //initiate socket withe the server through server searching port
+            Socket socket = new Socket(serverIP, 60004);              //initiate socket with the server through server searching port
             System.out.println("Connected to the server "+serverIP+" to pull messages from topic "+topicName+".");
             /////////////////////////////////////////////////////////////////////////////
             out = new ObjectOutputStream(socket.getOutputStream());//initiate writer
